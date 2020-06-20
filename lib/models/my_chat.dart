@@ -29,7 +29,7 @@ class MyChat {
   }
 
   factory MyChat.fromMap(Map<String, dynamic> map) {
-    Timestamp createdAt = map['createdAt'] as Timestamp ?? Timestamp;
+    Timestamp createdAt = map['createdAt'] ?? Timestamp.now();
     return new MyChat(
       id: map['id'] as String,
       createdAt: createdAt.toDate(),

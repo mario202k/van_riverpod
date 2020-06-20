@@ -66,7 +66,7 @@ class MyEventSearch extends SearchDelegate<MyEvent> {
             return ListTile(
               title: Text(state.myEvents ?? ''),
               leading: CircleAvatar(
-                backgroundImage: NetworkImage(state.myEvents[index].imageUrl),
+                backgroundImage: NetworkImage(state.myEvents[index].imageFlyerUrl),
                 radius: 25,
               ),
               onTap: () {
@@ -133,7 +133,7 @@ class MyEventSearch extends SearchDelegate<MyEvent> {
                   style: Theme.of(context).textTheme.button,
                 ),
                 leading: CachedNetworkImage(
-                  imageUrl: state.myEvents[index].imageUrl,
+                  imageUrl: state.myEvents[index].imageFlyerUrl,
                   imageBuilder: (context, imageProvider) => Container(
                     height: 50,
                     width: 50,

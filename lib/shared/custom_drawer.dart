@@ -5,10 +5,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:math' as math;
 
 import 'package:provider/provider.dart';
+import 'package:vanevents/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:vanevents/bloc/navigation_bloc/navigation_bloc.dart';
 import 'package:vanevents/models/user.dart';
+import 'package:vanevents/repository/user_repository.dart';
 import 'package:vanevents/routing/route.gr.dart';
-import 'package:vanevents/services/firebase_auth_service.dart';
 import 'package:vanevents/services/firestore_database.dart';
 
 
@@ -126,7 +127,7 @@ class CustomDrawerState extends State<CustomDrawer>
                     ),
                   ),
                   Positioned(
-                    top: 20.0 + MediaQuery.of(context).padding.top,
+                    top: 12.0 + MediaQuery.of(context).padding.top,
                     left: 4.0 + _animationController.value * maxSlide,
                     child: IconButton(
                       icon: Icon(Icons.menu),
@@ -200,7 +201,9 @@ class MyDrawer extends StatelessWidget {
                                   width: constraints.maxWidth,
                                   height: 50,
                                   child: Center(
-                                    child: Consumer<User>(
+                                    child:
+
+                                    Consumer<User>(
                                       builder: (context, user, child) {
                                         return Text(
                                           user.nom ?? '',
@@ -394,7 +397,8 @@ class MyDrawer extends StatelessWidget {
                         ),
                         onTap: () async {
                           context.read<FirestoreDatabase>().setInactive();
-                          context.read<FirebaseAuthService>().signOut();
+                          context.read<UserRepository>().signOut();
+                          context.bloc<AuthenticationBloc>().add(AuthenticationLoggedOut());
                         },
                       ),
                     ),

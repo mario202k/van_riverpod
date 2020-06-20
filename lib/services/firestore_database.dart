@@ -6,6 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:meta/meta.dart';
+import 'package:multi_image_picker/src/asset.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:vanevents/models/chat_membres.dart';
 import 'package:vanevents/models/my_chat.dart';
 import 'package:vanevents/models/event.dart';
@@ -16,14 +18,21 @@ import 'package:vanevents/models/user.dart';
 import 'package:vanevents/services/firestore_path.dart';
 import 'package:vanevents/services/firestore_service.dart';
 
+import '../main.dart';
+
 class FirestoreDatabase {
-  FirestoreDatabase({@required this.uid}) : assert(uid != null);
-  final String uid; //uid of user currently login
+  FirestoreDatabase();
+
+  String uid; //uid of user currently login
   final GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
 
   final _service = FirestoreService.instance;
   final StorageReference _storageReference = FirebaseStorage.instance.ref();
   final Firestore _db = Firestore.instance;
+
+  void setUid(String uid) {
+    this.uid = uid;
+  }
 
   Firestore get db => _db;
 
@@ -50,10 +59,12 @@ class FirestoreDatabase {
       path: FirestorePath.events(),
       builder: (data, documentId) => MyEvent.fromMap(data, documentId));
 
-  Stream<List<MyEvent>> eventsStream() => _service.collectionStream(
+  Stream<List<MyEvent>> eventsStreamAffiche() => _service.collectionStream(
       path: FirestorePath.events(),
       builder: (data, documentId) => MyEvent.fromMap(data, documentId),
-      queryBuilder: (query) => query.where('status', isEqualTo: 'A venir')
+      queryBuilder: (query) => query
+          .where('status', isEqualTo: 'A venir')
+          .where('isAffiche', isEqualTo: true)
       //.where('dateFin', isGreaterThanOrEqualTo: FieldValue.serverTimestamp())
       );
 
@@ -170,14 +181,14 @@ class FirestoreDatabase {
         .then((doc) => User.fromMap(doc.data, id));
   }
 
-  Future<String> creationChatRoom(User friend, User me) async {
+  Future<String> creationChatRoom(User friend) async {
     //création d'un chatRoom
     String idChatRoom = '';
 
     await _db
         .collection('chats')
-        .where('uid.${friend.id}', isEqualTo: true)
-        .where('uid.$uid', isEqualTo: true)
+        .where('membres.${friend.id}', isEqualTo: true)
+        .where('membres.$uid', isEqualTo: true)
         .where('isGroupe', isEqualTo: false)
         .getDocuments()
         .then((docs) async {
@@ -199,9 +210,9 @@ class FirestoreDatabase {
               .collection('chats')
               .document(idChatRoom)
               .collection('chatMembres')
-              .document(me.id)
+              .document(uid)
               .setData({
-            'id': me.id,
+            'id': uid,
             'lastReading': FieldValue.serverTimestamp(),
             'isReading': true
           }, merge: true);
@@ -244,80 +255,126 @@ class FirestoreDatabase {
     });
   }
 
+  Future<List<String>> loadPhotos(List<Asset> images, String idEvent) async {
+    List<String> urlPhotos = List<String>();
+
+    for (int i = 0; i < images.length; i++) {
+      final byteData = await images[i].getByteData();
+
+      File file = await File('${(await getTemporaryDirectory()).path}/$i.jpg')
+          .writeAsBytes(byteData.buffer
+              .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+      String path = file.path.substring(file.path.lastIndexOf('/') + 1);
+
+      StorageUploadTask uploadTask = _storageReference
+          .child('photos')
+          .child(idEvent)
+          .child("/$path")
+          .putFile(file);
+
+      urlPhotos.add(await uploadImage(uploadTask));
+    }
+
+    return urlPhotos;
+  }
+
   Future uploadEvent(
-      DateTime dateDebut,
+      {DateTime dateDebut,
       DateTime dateFin,
       String adresse,
       Coords coords,
       String titre,
       String description,
-      File image,
+      File flyer,
+      File banner,
       List<Formule> formules,
-      BuildContext context) async {
+      BuildContext context,
+      Map<String, bool> type,
+      Map<String, bool> genre,
+      List<Asset> images,
+      bool isAffiche}) async {
+    type.removeWhere((key, value) => value == false);
+    genre.removeWhere((key, value) => value == false);
+
+    DocumentReference reference = _db.collection("events").document();
+    String idEvent = reference.documentID;
+
     //création du path pour le flyer
-    String path = image.path.substring(image.path.lastIndexOf('/') + 1);
+    String pathFlyer = flyer.path.substring(flyer.path.lastIndexOf('/') + 1);
+    String pathBanner = banner.path.substring(banner.path.lastIndexOf('/') + 1);
 
-    StorageUploadTask uploadTask = _storageReference
-        .child('imageFlyer')
-        .child(dateDebut.toString())
-        .child("/$path")
-        .putFile(image);
+    StorageUploadTask uploadTaskFlyer = _storageReference
+        .child('Flyer')
+        .child(idEvent)
+        .child("/$pathFlyer")
+        .putFile(flyer);
+    StorageUploadTask uploadTaskBanner = _storageReference
+        .child('Banner')
+        .child(idEvent)
+        .child("/$pathBanner")
+        .putFile(flyer);
 
-    await uploadImage(uploadTask).then((url) async {
-      DocumentReference reference = _db.collection("events").document();
-      String idEvent = reference.documentID;
+    String urlFlyer = await uploadImage(uploadTaskFlyer);
+    String urlBanner = await uploadImage(uploadTaskBanner);
 
-      print('creation chat room');
-      //creation id chat
-      //création d'un chatRoom
-      String idChatRoom = _db.collection('chats').document().documentID;
+    List<String> urlPhotos = await loadPhotos(images, idEvent);
 
-      await _db.collection('chats').document(idChatRoom).setData({
-        'id': idChatRoom,
-        'createdAt': FieldValue.serverTimestamp(),
-        'isGroupe': true,
-        'imageUrl': url,
-        'titre': titre,
-      }, merge: true);
+    print('creation chat room');
+    //creation id chat
+    //création d'un chatRoom
+    String idChatRoom = _db.collection('chats').document().documentID;
 
-      await _db.collection("events").document(idEvent).setData({
-        "id": idEvent,
-        'chatId': idChatRoom,
-        "dateDebut": dateDebut,
-        "dateFin": dateFin,
-        "adresse": adresse,
-        'location': '${coords.latitude},${coords.longitude}',
-        "titre": titre,
-        'status': 'A venir',
-        "description": description,
-        "imageUrl": url,
-      }, merge: true).then((_) async {
-        formules.forEach((f) async {
-          DocumentReference reference = _db
-              .collection("events")
-              .document(idEvent)
-              .collection("formules")
-              .document();
-          String idFormule = reference.documentID;
+    await _db.collection('chats').document(idChatRoom).setData({
+      'id': idChatRoom,
+      'createdAt': FieldValue.serverTimestamp(),
+      'isGroupe': true,
+      'imageUrl': urlFlyer,
+      'titre': titre,
+    }, merge: true);
 
-          await _db
-              .collection("events")
-              .document(idEvent)
-              .collection("formules")
-              .document(idFormule)
-              .setData({
-            "id": idFormule,
-            "prix": f.prix,
-            "title": f.title,
-            "nb": f.nombreDePersonne,
-          }, merge: true);
-        });
-      }).then((_) {
-        showSnackBar("Event ajouter", context);
-      }).catchError((e) {
-        print(e);
-        showSnackBar("impossible d'ajouter l'Event", context);
+    await _db.collection("events").document(idEvent).setData({
+      "id": idEvent,
+      'chatId': idChatRoom,
+      "dateDebut": dateDebut,
+      "dateFin": dateFin,
+      "adresse": adresse,
+      'location': '${coords.latitude},${coords.longitude}',
+      "titre": titre,
+      'status': 'A venir',
+      "description": description,
+      'imageFlyerUrl': urlFlyer,
+      "imageBannerUrl": urlBanner,
+      'imagePhotos': urlPhotos,
+      'isAffiche': isAffiche,
+      'types': type.keys.toList(),
+      'genres': genre.keys.toList(),
+    }, merge: true).then((_) async {
+      formules.forEach((f) async {
+        DocumentReference reference = _db
+            .collection("events")
+            .document(idEvent)
+            .collection("formules")
+            .document();
+        String idFormule = reference.documentID;
+
+        await _db
+            .collection("events")
+            .document(idEvent)
+            .collection("formules")
+            .document(idFormule)
+            .setData({
+          "id": idFormule,
+          "prix": f.prix,
+          "title": f.title,
+          "nb": f.nombreDePersonne,
+        }, merge: true);
       });
+    }).then((_) {
+      showSnackBar("Event ajouter", context);
+    }).catchError((e) {
+      print(e);
+      showSnackBar("impossible d'ajouter l'Event", context);
     });
   }
 
@@ -328,7 +385,7 @@ class FirestoreDatabase {
   }
 
   void showSnackBar(String val, BuildContext context) {
-    Scaffold.of(context).showSnackBar(SnackBar(
+    scaffoldKey.currentState.showSnackBar(SnackBar(
         backgroundColor: Theme.of(context).colorScheme.error,
         duration: Duration(seconds: 3),
         content: Text(
@@ -497,13 +554,10 @@ class FirestoreDatabase {
             docs.documents.map((doc) => ChatMembre.fromMap(doc.data)).toList());
   }
 
-  Future addAmongGroupe(String chatId, String userName, String url) async {
+  Future addAmongGroupe(String chatId) async {
     return await db.collection('chats').document(chatId).setData({
-      'membres': {
-        uid: true
-      }
-    }, merge: true).then((value)async {
-
+      'membres': {uid: true}
+    }, merge: true).then((value) async {
       await _db
           .collection('chats')
           .document(chatId)
@@ -629,5 +683,56 @@ class FirestoreDatabase {
         .then((users) => users.documents
             .map((user) => User.fromMap(user.data, user.documentID))
             .toList());
+  }
+
+  Future updateUserImageProfil(String urlFlyer) {
+    return db.collection('users').document(uid).updateData({
+      'imageUrl': urlFlyer,
+    });
+  }
+
+  void updateUserGenre(Map genre) {
+    genre.forEach((key, value) {
+      db.collection('users').document(uid).updateData({
+        'genres':
+            value ? FieldValue.arrayUnion([key]) : FieldValue.arrayRemove([key])
+      });
+    });
+  }
+
+  void updateUserType(Map<String, bool> type) {
+    type.forEach((key, value) {
+      db.collection('users').document(uid).updateData({
+        'types':
+            value ? FieldValue.arrayUnion([key]) : FieldValue.arrayRemove([key])
+      });
+    });
+  }
+
+  Stream<List<MyEvent>> eventStreamMaSelectionGenre(List genres) {
+
+    if(genres.isEmpty){
+      genres = ['none'];
+    }
+
+    return db
+        .collection('events')
+        .where('genres', arrayContainsAny: genres)
+        .snapshots()
+        .map((docs) => docs.documents
+            .map((doc) => MyEvent.fromMap(doc.data, doc.documentID)).toList());
+  }
+  Stream<List<MyEvent>> eventStreamMaSelectionType(List types) {
+
+    if(types.isEmpty){
+      types = ['none'];
+    }
+
+    return db
+        .collection('events')
+        .where('types', arrayContainsAny: types)
+        .snapshots()
+        .map((docs) => docs.documents
+        .map((doc) => MyEvent.fromMap(doc.data, doc.documentID)).toList());
   }
 }

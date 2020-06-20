@@ -42,14 +42,33 @@ class MyMessage {
         type: data['type'] ?? '');
   }
 
-  factory MyMessage.fromMapFcm(Map data) {
-//    print('//');
-//    print(data['data']['date']);
-    //Timestamp time = data['data']['date'] ?? '';
+  factory MyMessage.fromIosFcm(Map data) {
+
+    int type = int.parse(data['type'].toString());
+
+    String date = data['date'].toString();
+
+    return MyMessage(
+        id: data['id'] ?? '',
+        idFrom: data['idFrom'] ?? '',
+        idTo: data['idTo'] ?? '',
+        message: data['aps'] != null ? data['aps']['alert']['body'] : data['notification']['body'],
+        date: DateTime.parse(date) ?? '',
+        type: type ?? '');
+  }
+
+
+  factory MyMessage.fromAndroidFcm(Map data) {
+    print(data['notification']['body']);
+    print(int.parse(data['data']['type'].toString()));
+    print(data['data']['type']);
+
 
     int type = int.parse(data['data']['type'].toString());
 
     String date = data['data']['date'].toString();
+    print(DateTime.parse(date).toString());
+    print(date);
 
     return MyMessage(
         id: data['data']['id'] ?? '',

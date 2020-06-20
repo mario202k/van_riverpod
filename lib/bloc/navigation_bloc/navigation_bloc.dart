@@ -34,6 +34,4 @@ class NavigationBloc extends Bloc<NavigationEvents,NavigationStates>{
         break;
     }
   }
-
-
 }

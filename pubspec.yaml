@@ -48,7 +48,7 @@ dependencies:
   flutter_swiper: ^1.1.6
   flutter_local_notifications: ^1.4.3
   flutter_circular_chart: ^0.1.0
-  flutter_form_builder: ^3.10.0
+  flutter_form_builder: ^3.10.1
   intl: ^0.16.1
   platform_alert_dialog: ^1.0.0+2
   cached_network_image: ^2.2.0+1
@@ -73,6 +73,13 @@ dependencies:
   map_launcher: ^0.4.5
   emoji_picker: ^0.1.0
   shimmer: ^1.1.1
+  agora_rtc_engine: ^1.0.12
+  permission_handler: ^5.0.0+hotfix.8
+  system_alert_window: ^0.2.2+2
+  equatable: ^1.2.0
+  flare_splash_screen: ^3.0.1
+  after_layout: ^1.0.7+2
+  multi_image_picker: ^4.6.7
 
 dev_dependencies:
   flutter_launcher_icons: ^0.7.5
@@ -108,6 +115,7 @@ flutter:
     - assets/images/icon.jpg
     - assets/animations/Nope.flr
     - assets/animations/ok.flr
+    - assets/animations/logo.flr
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

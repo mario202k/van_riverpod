@@ -30,9 +30,9 @@ class _AuthWidgetState extends State<AuthWidget> {
 
         !userSnapshotStatic.hasError) {
       return userSnapshotStatic.data != null
-          ? CustomDrawer(child: BaseScreens(userSnapshotStatic.data.uid))
+          ? CustomDrawer(child: BaseScreens())
 
-          : widget.seenOnboarding ? SplashScreen():Walkthrough();
+          : widget.seenOnboarding ? MySplashScreen():Walkthrough();
     }
 
     return Scaffold(

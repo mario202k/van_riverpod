@@ -7,13 +7,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:vanevents/bloc/navigation_bloc/navigation_bloc.dart';
+import 'package:vanevents/screens/model_body.dart';
+import 'package:vanevents/screens/model_screen.dart';
 import 'package:vanevents/services/firebase_cloud_messaging.dart';
 import 'package:vanevents/services/firestore_database.dart';
+import 'package:vanevents/shared/topAppBar.dart';
 
 class BaseScreens extends StatefulWidget {
-  final String uid;
 
-  BaseScreens(this.uid);
+  BaseScreens();
 
   @override
   _BaseScreensState createState() => _BaseScreensState();
@@ -22,21 +24,36 @@ class BaseScreens extends StatefulWidget {
 class _BaseScreensState extends State<BaseScreens>
     with WidgetsBindingObserver, AutomaticKeepAliveClientMixin, AfterInitMixin {
   final FirebaseMessaging _fcm = FirebaseMessaging();
+
+
   @override
   void initState() {
+    print('Basescreen');
+
+
 
     //registerNotification(widget.uid);
 
     //WidgetsBinding.instance.addPostFrameCallback(_afterLayout);
     WidgetsBinding.instance.addObserver(this);
-
     super.initState();
   }
 //
   @override
   void didInitState() {
-    NotificationHandler().initializeFcmNotification(widget.uid,context);
+    print(Provider.of<FirestoreDatabase>(context).uid);
+
+    //print(context.read<FirestoreDatabase>().email);
+    initNotification();
+
+    //NotificationApnHandler().initializeApnNotification(user.id,context);
   }
+
+  void initNotification() async{
+
+    NotificationHandler().initializeFcmNotification(context.read<FirestoreDatabase>().uid,context);
+  }
+
 
 //  subscribeTo() async {
 //    SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -172,6 +189,8 @@ class _BaseScreensState extends State<BaseScreens>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+
+
     super.dispose();
   }
 
@@ -203,14 +222,8 @@ class _BaseScreensState extends State<BaseScreens>
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Theme.of(context).colorScheme.primary,
-      statusBarIconBrightness: Theme.of(context).colorScheme.brightness,
-      systemNavigationBarColor: Theme.of(context).colorScheme.primary,
-      systemNavigationBarIconBrightness:
-          Theme.of(context).colorScheme.brightness,
-    ));
-    return SafeArea(child: BlocBuilder<NavigationBloc, NavigationStates>(
+
+    return BlocBuilder<NavigationBloc, NavigationStates>(
         builder: (BuildContext context, NavigationStates state) {
       print(state.toString());
       int i = 0;
@@ -229,59 +242,62 @@ class _BaseScreensState extends State<BaseScreens>
           break;
       }
 
-      return Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        body: state as Widget,
-        bottomNavigationBar: CurvedNavigationBar(
-          backgroundColor: Theme.of(context).colorScheme.background,
-          index: i,
-          color: Theme.of(context).colorScheme.primary,
-          height: 45,
-          onTap: (index) {
-            switch (index) {
-              case 0:
-                BlocProvider.of<NavigationBloc>(context)
-                    .add(NavigationEvents.HomeEvents);
-                break;
-              case 1:
-                BlocProvider.of<NavigationBloc>(context)
-                    .add(NavigationEvents.Chat);
-                break;
-              case 2:
-                BlocProvider.of<NavigationBloc>(context)
-                    .add(NavigationEvents.Billets);
-                break;
-              case 3:
-                BlocProvider.of<NavigationBloc>(context)
-                    .add(NavigationEvents.Profil);
-                break;
-            }
-          },
-          items: <Widget>[
-            Icon(
-              FontAwesomeIcons.home,
-              size: 30,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            Icon(
-              FontAwesomeIcons.comments,
-              size: 30,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            Icon(
-              FontAwesomeIcons.ticketAlt,
-              size: 30,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            Icon(
-              FontAwesomeIcons.user,
-              size: 30,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-          ],
+      return ModelScreen(
+        child: Scaffold(
+
+
+          body: state as Widget,
+          bottomNavigationBar: CurvedNavigationBar(
+            backgroundColor: Theme.of(context).colorScheme.background,
+            index: i,
+            color: Theme.of(context).colorScheme.primary,
+            height: 45,
+            onTap: (index) {
+              switch (index) {
+                case 0:
+                  BlocProvider.of<NavigationBloc>(context)
+                      .add(NavigationEvents.HomeEvents);
+                  break;
+                case 1:
+                  BlocProvider.of<NavigationBloc>(context)
+                      .add(NavigationEvents.Chat);
+                  break;
+                case 2:
+                  BlocProvider.of<NavigationBloc>(context)
+                      .add(NavigationEvents.Billets);
+                  break;
+                case 3:
+                  BlocProvider.of<NavigationBloc>(context)
+                      .add(NavigationEvents.Profil);
+                  break;
+              }
+            },
+            items: <Widget>[
+              Icon(
+                FontAwesomeIcons.home,
+                size: 30,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              Icon(
+                FontAwesomeIcons.comments,
+                size: 30,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              Icon(
+                FontAwesomeIcons.ticketAlt,
+                size: 30,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              Icon(
+                FontAwesomeIcons.user,
+                size: 30,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ],
+          ),
         ),
       );
-    }));
+    });
   }
 
   @override

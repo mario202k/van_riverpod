@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:vanevents/models/user.dart';
 
 class ChatMembre{
   final String id;

@@ -1,14 +1,18 @@
 import 'dart:io';
 import 'package:auto_route/auto_route.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:vanevents/models/user.dart';
 import 'package:vanevents/routing/route.gr.dart';
 import 'package:vanevents/services/firestore_database.dart';
 import 'package:vanevents/shared/custom_drawer.dart';
 import 'package:vanevents/shared/my_event_search_chat.dart';
+import 'package:vanevents/shared/toggle_bool_chat_room.dart';
 import 'package:vanevents/shared/user_search_chat.dart';
 
 class TopAppBar extends StatefulWidget {
@@ -27,7 +31,8 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
   bool startAnimation = false;
   AnimationController animationController;
   bool disposed = false;
-  FirestoreDatabase db;
+  final StorageReference _storageReference = FirebaseStorage.instance.ref();
+
   User user;
 
   _afterLayout(_) {
@@ -56,10 +61,93 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void showDialogSource(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) => Platform.isAndroid
+          ? AlertDialog(
+              title: Text('Source?',style: Theme.of(context).textTheme.bodyText1,),
+              content: Text('Veuillez choisir une source'),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text('Caméra'),
+                  onPressed: () {
+                    getImageCamera();
+                    Navigator.of(context).pop();
+                  },
+                ),
+                FlatButton(
+                  child: Text('Galerie'),
+                  onPressed: () {
+                    getImageGallery();
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            )
+          : CupertinoAlertDialog(
+              title: Text('Source?',style: Theme.of(context).textTheme.bodyText1,),
+              content: Text('Veuillez choisir une source'),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text('Caméra'),
+                  onPressed: () {
+                    getImageCamera();
+                    Navigator.of(context).pop();
+                  },
+                ),
+                FlatButton(
+                  child: Text('Galerie'),
+                  onPressed: () {
+                    getImageGallery();
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+    );
+  }
+
+  Future<String> uploadImage(StorageUploadTask uploadTask) async {
+    var url = await (await uploadTask.onComplete).ref.getDownloadURL();
+
+    return url.toString();
+  }
+
+  Future getImageGallery() async {
+    File imageProfil = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    //création du path pour le flyer
+    await uploadImageProfil(imageProfil);
+  }
+
+  Future getImageCamera() async {
+    File imageProfil = await ImagePicker.pickImage(source: ImageSource.camera);
+    await uploadImageProfil(imageProfil);
+  }
+
+  Future uploadImageProfil(File imageProfil) async {
+    
+    //création du path pour le flyer
+    String pathprofil =
+        imageProfil.path.substring(imageProfil.path.lastIndexOf('/') + 1);
+    
+    StorageUploadTask uploadTaskFlyer = _storageReference
+        .child('imageProfil')
+        .child(context.read<User>().id)
+        .child("/$pathprofil")
+        .putFile(imageProfil);
+    
+    String urlFlyer = await uploadImage(uploadTaskFlyer);
+    
+    await context.read<FirestoreDatabase>().updateUserImageProfil(urlFlyer);
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     if (widget.isMenu) {
-      db = Provider.of<FirestoreDatabase>(context, listen: false);
       user = Provider.of<User>(context, listen: false);
       final toggle = Provider.of<ValueNotifier<bool>>(context, listen: false);
 
@@ -75,10 +163,11 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
     }
 
     return Stack(
+      alignment: Alignment.center,
+      overflow: Overflow.visible,
       children: <Widget>[
         ClipPath(
-          clipper:
-              widget.title == 'Chat' ? ClippingChatClass() : ClippingClass(),
+          clipper: ClippingClass(),
           child: AnimatedContainer(
             duration: Duration(seconds: 1),
             curve: Curves.easeInOut,
@@ -95,8 +184,7 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
               children: <Widget>[
                 IconButton(
                   icon: widget.isMenu
-                      ?
-                      SizedBox()
+                      ? SizedBox()
 //                  AnimatedIcon(
 //                          icon: AnimatedIcons.menu_arrow,
 //                          progress: animationController,
@@ -106,153 +194,54 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
                           Platform.isAndroid
                               ? Icons.arrow_back
                               : Icons.arrow_back_ios,
-                          color: Theme.of(context).colorScheme.onBackground,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                   onPressed: () {
-                    widget.isMenu ? CustomDrawer.of(context).open() : Navigator.pop(context);
+                    widget.isMenu
+                        ? CustomDrawer.of(context).open()
+                        : Navigator.pop(context);
                   },
                 ),
-                Expanded(
-                  child:
-//                Text(
-//                  widget.title,
-//                  style: Theme.of(context).textTheme.headline6,
-//                ),
-                SizedBox()
-                ),
-                widget.title == 'Chat'
-                    ? PopupMenuButton<String>(
-                        color: Theme.of(context).colorScheme.primary,
-                        onSelected: (String value) async {
-                          switch (value) {
-                            case 'Value1':
-                              final User userFriend = await showSearch(
-                                  context: context,
-                                  delegate: UserSearch(UserBlocSearchName()));
-
-                              if (userFriend != null) {
-                                context.read<FirestoreDatabase>().creationChatRoom(userFriend, user).then((chatId) {
-                                  db.getMyChat(chatId).then((myChat) {
-
-                                    db.chatUsersFuture(myChat).then((users){
-
-                                      User friend;
-                                      if(!myChat.isGroupe){
-                                        friend = users.firstWhere((user) => user.id != db.uid);
-                                      }
-                                      ExtendedNavigator.of(context).pushNamed(
-                                          Routes.chatRoom,
-                                          arguments: ChatRoomArguments(
-                                              myChat: myChat, membres: users, friend: friend));
-                                    });
-                                  });
-                                });
-
-
-//                                db
-//                                    .creationChatRoom(userFriend, user)
-//                                    .then((chatId) {
-//                                  db.getMyChat(chatId).then((myChat) {
-//                                    ExtendedNavigator.of(context).pushNamed(
-//                                        Routes.chatRoom,
-//                                        arguments: ChatRoomArguments(
-//                                            myChat: myChat,
-//                                            idFriend: userFriend.id,
-//                                            membre: {
-//                                              userFriend.imageUrl:
-//                                                  userFriend.nom
-//                                            }));
-//                                  });
-//                                });
-                              }
-
-                              break;
-                            case 'Value2':
-                              await showSearch(
-                                      context: context,
-                                      delegate: MyEventSearch(
-                                          MyEventBlocSearchName()))
-                                  .then((myEvent) async {
-                                if (myEvent != null) {
-                                  await db
-                                      .addAmongGroupe(myEvent.chatId, user.nom,
-                                          user.imageUrl)
-                                      .then((_) {
-                                    db.getMyChat(myEvent.chatId).then((myChat) {
-
-                                      db.chatUsersFuture(myChat).then((users){
-
-                                        User friend;
-                                        if(!myChat.isGroupe){
-                                          friend = users.firstWhere((user) => user.id != db.uid);
-                                        }
-                                        ExtendedNavigator.of(context).pushNamed(
-                                            Routes.chatRoom,
-                                            arguments: ChatRoomArguments(
-                                                myChat: myChat, membres: users, friend: friend));
-                                      });
-
-
-
-                                    });
-                                  });
-                                }
-                              });
-
-                              break;
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 15),
-                          child: Icon(
-                            FontAwesomeIcons.search,
-                            color: Theme.of(context).colorScheme.onBackground,
-                          ),
-                        ),
-                        itemBuilder: (BuildContext context) =>
-                            <PopupMenuEntry<String>>[
-                          PopupMenuItem<String>(
-                            value: 'Value1',
-                            child: Text(
-                              'Par Nom',
-                              style: Theme.of(context).textTheme.button,
-                            ),
-                          ),
-                          PopupMenuItem<String>(
-                            value: 'Value2',
-                            child: Text(
-                              'Groupes',
-                              style: Theme.of(context).textTheme.button,
-                            ),
-                          ),
-                        ],
-                      )
-                    : SizedBox(),
               ],
             ),
           ),
         ),
         widget.title == 'Profil'
-            ? FractionalTranslation(
-                translation: Offset(
-                  0.0,
-                  .3,
-                ),
-                child: Align(
-                  alignment: FractionalOffset(0.5, 0.0),
-                  child: CircleAvatar(
-                    radius: 55,
+            ? Positioned(
+          top: 22,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: ()=>showDialogSource(context),
+                child: SizedBox(
+                  width: 150,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    overflow: Overflow.visible,
+                    children: <Widget>[
 
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                      CircleAvatar(
+                        radius: 52,
+                        backgroundColor:
+                        Theme.of(context).colorScheme.primary,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundImage: NetworkImage(user.imageUrl),
+                        ),
+                      ),
+                      Positioned(
+                        top: 60,
+                        right: 0,
+                        child: Icon(
+                          FontAwesomeIcons.pencilAlt,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
 
-                    child: CircleAvatar(
-                      radius: 50,
-
-                      backgroundImage: NetworkImage(user.imageUrl) ,
-
-                    ),
+                    ],
                   ),
-                ))
+                ),
+              ),
+            )
             : SizedBox(),
       ],
     );

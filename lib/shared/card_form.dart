@@ -29,7 +29,7 @@ class _CardFormState extends State<CardForm> {
   bool isDispose = false;
   double width = double.maxFinite;
   bool startAnimation = false;
-  FirebaseAuthService auth;
+  //FirebaseAuthService auth;
   bool obscureTextSignupConfirm = true;
 
   File _image;
@@ -86,7 +86,7 @@ class _CardFormState extends State<CardForm> {
 
   @override
   Widget build(BuildContext context) {
-    auth = Provider.of<FirebaseAuthService>(context, listen: false);
+    //auth = Provider.of<FirebaseAuthService>(context, listen: false);
     return LayoutBuilder(builder: (context, constraints) {
       return Stack(
         children: <Widget>[
@@ -261,58 +261,58 @@ class _CardFormState extends State<CardForm> {
   }
 
   onSubmit() async {
-    if (!_fbKey.currentState.validate()) {
-      auth.showSnackBar('Formulaire invalide', context);
-      return;
-    }
-    setState(() {
-      startAnimation = true;
-    });
-
-    switch (widget.type) {
-      case 'login':
-        await auth
-            .signInWithEmailAndPassword(
-                _textEdit.elementAt(0).text, _textEdit.elementAt(1).text)
-            .catchError((e) {
-          setState(() {
-            startAnimation = false;
-          });
-          print(e);
-          auth.showSnackBar("email ou mot de passe invalide", context);
-        }).whenComplete(() {
-          setState(() {
-            startAnimation = false;
-          });
-        });
-        break;
-      case 'signup':
-        if (_image != null) {
-          await auth.register(
-              _textEdit.elementAt(1).text, //email
-              _textEdit.elementAt(2).text, //mdp
-              _textEdit.elementAt(0).text, //nom
-              _image,
-              context).catchError((){
-            auth.showSnackBar('Impossible de s\'inscrire', context);
-          }).whenComplete((){
-            auth.showSnackBar('Un email de vérification a été envoyé', context);
-            setState(() {
-              startAnimation = false;
-            });
-            //ExtendedNavigator.of(context).pop();
-          });
-        } else {
-          auth.showSnackBar('Il manque une photo', context);
-          setState(() {
-            startAnimation = false;
-          });
-        }
-        break;
-    }
-    setState(() {
-      startAnimation = false;
-    });
+//    if (!_fbKey.currentState.validate()) {
+//      auth.showSnackBar('Formulaire invalide', context);
+//      return;
+//    }
+//    setState(() {
+//      startAnimation = true;
+//    });
+//
+//    switch (widget.type) {
+//      case 'login':
+//        await auth
+//            .signInWithEmailAndPassword(
+//                _textEdit.elementAt(0).text, _textEdit.elementAt(1).text)
+//            .catchError((e) {
+//          setState(() {
+//            startAnimation = false;
+//          });
+//          print(e);
+//          auth.showSnackBar("email ou mot de passe invalide", context);
+//        }).whenComplete(() {
+//          setState(() {
+//            startAnimation = false;
+//          });
+//        });
+//        break;
+//      case 'signup':
+//        if (_image != null) {
+//          await auth.register(
+//              _textEdit.elementAt(1).text, //email
+//              _textEdit.elementAt(2).text, //mdp
+//              _textEdit.elementAt(0).text, //nom
+//              _image,
+//              context).catchError((){
+//            auth.showSnackBar('Impossible de s\'inscrire', context);
+//          }).whenComplete((){
+//            auth.showSnackBar('Un email de vérification a été envoyé', context);
+//            setState(() {
+//              startAnimation = false;
+//            });
+//            //ExtendedNavigator.of(context).pop();
+//          });
+//        } else {
+//          auth.showSnackBar('Il manque une photo', context);
+//          setState(() {
+//            startAnimation = false;
+//          });
+//        }
+//        break;
+//    }
+//    setState(() {
+//      startAnimation = false;
+//    });
 
   }
 
@@ -477,7 +477,8 @@ class _CardFormState extends State<CardForm> {
             }
           },
           validators: validators,
-        ));
+        )
+    );
   }
 
   InputDecoration buildInputDecoration(BuildContext context, String labelText, Icon icon, IconButton iconButton) {

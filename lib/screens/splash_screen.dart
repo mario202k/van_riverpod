@@ -1,91 +1,120 @@
+import 'package:flare_splash_screen/flare_splash_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:vanevents/screens/login.dart';
+import 'package:vanevents/bloc/login/login_screen.dart';
+import 'package:vanevents/routing/route.gr.dart';
+import 'package:after_layout/after_layout.dart';
 import 'package:vanevents/shared/appPageRoute.dart';
 
-class SplashScreen extends StatefulWidget {
-  SplashScreen();
+class MySplashScreen extends StatefulWidget {
+  MySplashScreen();
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  _MySplashScreenState createState() => _MySplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  double largeur = 0;
-  double hauteur = 0;
-
-  _afterLayout(_) {
-    print(largeur);
-    setState(() {
-      largeur = MediaQuery.of(context).size.width * 0.8;
-      hauteur = MediaQuery.of(context).size.width * 0.8;
-    });
-  }
+class _MySplashScreenState extends State<MySplashScreen>
+    with SingleTickerProviderStateMixin, AfterLayoutMixin {
+  AnimationController _controller;
+  Animation _animation;
+  CurvedAnimation _curve;
 
   @override
   void initState() {
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 4000),
+    );
 
-    //setStatusBarColor();
+    _curve = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
-    WidgetsBinding.instance.addPostFrameCallback(_afterLayout);
+    _animation = Tween(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_curve);
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
 
-//    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-//      statusBarColor: Theme.of(context).colorScheme.secondary,
-//      statusBarIconBrightness: Theme.of(context).colorScheme.brightness,
-//      systemNavigationBarColor: Theme.of(context).colorScheme.secondary,
-//      systemNavigationBarIconBrightness:
-//          Theme.of(context).colorScheme.brightness,
-//    ));
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
+      body: Stack(
+        alignment: Alignment.center,
+        children: <Widget>[
+          Hero(
+            tag: 'logo',
+            child: SplashScreen.callback(
+              name: 'assets/animations/logo.flr',
+              fit: BoxFit.contain,
+              startAnimation: 'start',
+              onSuccess: (va) async {
 
+//                  Future.delayed(Duration(seconds: 3)).then((value) => Navigator.pop(context));
+//                  Navigator.of(context).pushAndRemoveUntil(
+//                      AppPageRoute(
+//                          builder: (BuildContext context) => LoginScreen()),
+//                      ModalRoute.withName(Routes.authentication));
+              //Navigator.of(context).pushReplacementNamed(Routes.login);
 
+              Navigator.of(context).pushReplacement(AppPageRoute(
+                  builder: (BuildContext context) => LoginScreen()));
 
-    return Container(
-      color: Theme.of(context).colorScheme.secondary,
-      child: SafeArea(
-        child: Scaffold(
-//      appBar: PreferredSize(
-//          preferredSize: Size.fromHeight(0),
-//          child: AppBar( // Here we create one to set status bar color
-//            backgroundColor: Theme.of(context).colorScheme.secondary, // Set any color of status bar you want; or it defaults to your theme's primary color
-//          )
-//      ),
-          backgroundColor: Theme.of(context).colorScheme.background,
-          body: Center(
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => Login()));
-//            MaterialPageRoute(
-//                builder: (context) =>
-//                    Login());
-                // ExtendedNavigator.of(context).pushNamed(Routes.login);
+//                  Navigator.of(context).pushAndRemoveUntil(
+//                      AppPageRoute(
+//                          builder: (BuildContext context) => LoginScreen()),
+//                      ModalRoute.withName(Routes.authentication));
+               // Navigator.of(context).maybePop();
+//                  Navigator.of(context).push(
+//                    AppPageRoute(
+//                        builder: (BuildContext context) => LoginScreen())
+//                  );
               },
-              child: AnimatedContainer(
-                width: largeur,
-                height: hauteur,
-                curve: Curves.easeOutBack,
-                onEnd: () {
-                  Navigator.of(context).push(
-                      AppPageRoute(builder: (BuildContext context) => Login()));
-                  //ExtendedNavigator.of(context).pushNamed(Routes.login);
-                },
-                duration: Duration(seconds: 2),
-                child: Hero(
-                  tag: 'splash',
-                  child: Image.asset('assets/images/icon.jpg'),
-                ),
+              onError: (error, stacktrace) => print(error),
+              isLoading: false,
+              //until: () => Future.delayed(Duration(seconds: 4)),
+            ),
+          ),
+          Positioned(
+            bottom: 90,
+            child: FadeTransition(
+              opacity: _animation,
+              child: Column(
+                children: <Widget>[
+                  Hero(
+                    tag: 'vanevents',
+                    child: Text(
+                      'Van e.vents',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyText2
+                          .copyWith(fontSize: 45),
+                    ),
+                  ),
+                  Text(
+                    'Partager votre événement ',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyText1,
+                  )
+                ],
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
+  }
+
+  @override
+  void afterFirstLayout(BuildContext context) {
+    _controller.forward();
   }
 }

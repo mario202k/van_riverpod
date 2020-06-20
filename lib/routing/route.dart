@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:auto_route/auto_route_annotations.dart';
 import 'package:vanevents/auth_widget.dart';
+import 'package:vanevents/authentication.dart';
 import 'package:vanevents/screens/admin_event.dart';
 import 'package:vanevents/screens/base_screen.dart';
 import 'package:vanevents/screens/chat_room.dart';
@@ -20,9 +21,9 @@ import 'package:vanevents/screens/walkthrough.dart';
 class $Router {
 //flutter packages pub run build_runner build
   @initial
-  AuthWidget authWidget;
+  Authentication authentication;
 
-  Login login;
+  LoginForm login;
   @CustomRoute(transitionsBuilder: TransitionsBuilders.zoomIn,durationInMilliseconds: 300)
   ResetPassword resetPassword;
   @CustomRoute(transitionsBuilder: TransitionsBuilders.zoomIn,durationInMilliseconds: 300)
@@ -46,7 +47,9 @@ class $Router {
   @CustomRoute(transitionsBuilder: TransitionsBuilders.zoomIn,durationInMilliseconds: 300)
   AdminEvents adminEvents;
 
-  SplashScreen splashScreen;
+  MySplashScreen splashScreen;
+
+  Walkthrough walkthrough;
 
 
 }

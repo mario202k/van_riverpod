@@ -56,11 +56,7 @@ class AuthWidgetBuilder extends StatelessWidget {
                 create: (BuildContext context) => MessageBloc(),
 
               ),
-              BlocProvider<MessageSentBloc>(
-                create: (BuildContext context) => MessageSentBloc(),
-              )
 
-              // NOTE: Any other user-bound providers here can be added here
             ],
             child: builder(context, snapshot),
           );

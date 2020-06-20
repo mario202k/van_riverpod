@@ -7,14 +7,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:vanevents/auth_widget.dart';
+import 'package:vanevents/authentication.dart';
 import 'package:vanevents/screens/login.dart';
 import 'package:vanevents/screens/reset_password.dart';
 import 'package:vanevents/screens/sign_up.dart';
 import 'package:vanevents/screens/base_screen.dart';
 import 'package:vanevents/screens/chat_room.dart';
-import 'package:vanevents/models/my_chat.dart';
-import 'package:vanevents/models/user.dart';
 import 'package:vanevents/screens/full_photo.dart';
 import 'dart:io';
 import 'package:vanevents/screens/upload_event.dart';
@@ -26,9 +24,10 @@ import 'package:vanevents/screens/qr_code.dart';
 import 'package:vanevents/screens/monitoring_scanner.dart';
 import 'package:vanevents/screens/admin_event.dart';
 import 'package:vanevents/screens/splash_screen.dart';
+import 'package:vanevents/screens/walkthrough.dart';
 
 abstract class Routes {
-  static const authWidget = '/';
+  static const authentication = '/';
   static const login = '/login';
   static const resetPassword = '/reset-password';
   static const signUp = '/sign-up';
@@ -42,8 +41,9 @@ abstract class Routes {
   static const monitoringScanner = '/monitoring-scanner';
   static const adminEvents = '/admin-events';
   static const splashScreen = '/splash-screen';
+  static const walkthrough = '/walkthrough';
   static const all = {
-    authWidget,
+    authentication,
     login,
     resetPassword,
     signUp,
@@ -57,6 +57,7 @@ abstract class Routes {
     monitoringScanner,
     adminEvents,
     splashScreen,
+    walkthrough,
   };
 }
 
@@ -72,19 +73,14 @@ class Router extends RouterBase {
   Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final args = settings.arguments;
     switch (settings.name) {
-      case Routes.authWidget:
-        if (hasInvalidArgs<AuthWidgetArguments>(args)) {
-          return misTypedArgsRoute<AuthWidgetArguments>(args);
-        }
-        final typedArgs = args as AuthWidgetArguments ?? AuthWidgetArguments();
+      case Routes.authentication:
         return MaterialPageRoute<dynamic>(
-          builder: (context) => AuthWidget(
-              key: typedArgs.key, seenOnboarding: typedArgs.seenOnboarding),
+          builder: (context) => Authentication(),
           settings: settings,
         );
       case Routes.login:
         return MaterialPageRoute<dynamic>(
-          builder: (context) => Login(),
+          builder: (context) => LoginForm(),
           settings: settings,
         );
       case Routes.resetPassword:
@@ -103,13 +99,9 @@ class Router extends RouterBase {
           transitionDuration: const Duration(milliseconds: 300),
         );
       case Routes.baseScreens:
-        if (hasInvalidArgs<BaseScreensArguments>(args, isRequired: true)) {
-          return misTypedArgsRoute<BaseScreensArguments>(args);
-        }
-        final typedArgs = args as BaseScreensArguments;
         return PageRouteBuilder<dynamic>(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              BaseScreens(typedArgs.uid),
+              BaseScreens(),
           settings: settings,
           transitionsBuilder: TransitionsBuilders.zoomIn,
           transitionDuration: const Duration(milliseconds: 300),
@@ -121,7 +113,7 @@ class Router extends RouterBase {
         final typedArgs = args as ChatRoomArguments;
         return PageRouteBuilder<dynamic>(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              ChatRoom(typedArgs.myChat, typedArgs.membres, typedArgs.friend),
+              ChatRoom(typedArgs.chatId),
           settings: settings,
           transitionsBuilder: TransitionsBuilders.zoomIn,
           transitionDuration: const Duration(milliseconds: 300),
@@ -211,7 +203,12 @@ class Router extends RouterBase {
         );
       case Routes.splashScreen:
         return MaterialPageRoute<dynamic>(
-          builder: (context) => SplashScreen(),
+          builder: (context) => MySplashScreen(),
+          settings: settings,
+        );
+      case Routes.walkthrough:
+        return MaterialPageRoute<dynamic>(
+          builder: (context) => Walkthrough(),
           settings: settings,
         );
       default:
@@ -224,26 +221,10 @@ class Router extends RouterBase {
 // Arguments holder classes
 // **************************************************************************
 
-//AuthWidget arguments holder class
-class AuthWidgetArguments {
-  final Key key;
-  final bool seenOnboarding;
-  AuthWidgetArguments({this.key, this.seenOnboarding});
-}
-
-//BaseScreens arguments holder class
-class BaseScreensArguments {
-  final String uid;
-  BaseScreensArguments({@required this.uid});
-}
-
 //ChatRoom arguments holder class
 class ChatRoomArguments {
-  final MyChat myChat;
-  final List<User> membres;
-  final User friend;
-  ChatRoomArguments(
-      {@required this.myChat, @required this.membres, @required this.friend});
+  final String chatId;
+  ChatRoomArguments({@required this.chatId});
 }
 
 //FullPhoto arguments holder class

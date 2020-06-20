@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:after_init/after_init.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -24,17 +25,16 @@ import 'package:vanevents/services/firestore_database.dart';
 import 'package:vanevents/shared/toggle_bool_chat_room.dart';
 
 class ChatRoom extends StatefulWidget {
-  final MyChat myChat;
-  final List<User> membres;
-  final User friend;
 
-  ChatRoom(this.myChat, this.membres,this.friend);
+  final String chatId;
+
+  ChatRoom(this.chatId);
 
   @override
   _ChatRoomState createState() => _ChatRoomState();
 }
 
-class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
+class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver,AfterInitMixin {
   List<MyMessage> _messages = List<MyMessage>();
   String lastMsgId;
 
@@ -51,12 +51,12 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   MyMessage lastMessage;
   BoolToggle boolChatRoom;
   Stream<User> streamUserFriend;
-  Future<User> userFriend;
   FirestoreDatabase db;
   bool isChatRoom = true;
   StreamSubscription<List<User>> streamSubscription;
   List<User> membres;
-
+  MyChat myChat;
+  User friend;
 
   _afterLayout(_) {
     if (listKey.currentState != null) {
@@ -81,20 +81,26 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
-    membres = widget.membres;
     super.initState();
   }
 
   @override
+  void didInitState() {
+//    BlocProvider.of<MessageBloc>(context)
+//        .add(MessageEvents(widget.chatId, false, false, true));
+  }
+
+  @override
   void dispose() {
-    if(streamSubscription != null){
+
+    if (streamSubscription != null) {
       streamSubscription.cancel();
     }
 
     isChatRoom = false;
     WidgetsBinding.instance.removeObserver(this);
-    if (!widget.myChat.isGroupe) {
-      db.setIsNotReading(widget.myChat.id);
+    if (!myChat.isGroupe) {
+      db.setIsNotReading(widget.chatId);
     }
     boolChatRoom.setAllFalse();
 
@@ -107,24 +113,24 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
     if (isChatRoom) {
       switch (state) {
         case AppLifecycleState.paused:
-          if (!widget.myChat.isGroupe) {
-            db.setIsNotReading(widget.myChat.id);
+          if (!myChat.isGroupe) {
+            db.setIsNotReading(myChat.id);
           }
           break;
         case AppLifecycleState.resumed:
-          if (!widget.myChat.isGroupe) {
-            db.setIsReading(widget.myChat.id);
+          if (!myChat.isGroupe) {
+            db.setIsReading(myChat.id);
             //context.select<FirestoreDatabase,void>((value) => null)
           }
           break;
         case AppLifecycleState.inactive:
-          if (!widget.myChat.isGroupe) {
-            db.setIsNotReading(widget.myChat.id);
+          if (!myChat.isGroupe) {
+            db.setIsNotReading(myChat.id);
           }
           break;
         case AppLifecycleState.detached:
-          if (!widget.myChat.isGroupe) {
-            db.setIsNotReading(widget.myChat.id);
+          if (!myChat.isGroupe) {
+            db.setIsNotReading(myChat.id);
           }
           break;
       }
@@ -133,205 +139,233 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
 
   @override
   void deactivate() {
-    if (!widget.myChat.isGroupe) {
-      db.setIsNotReading(widget.myChat.id);
+    if (!myChat.isGroupe) {
+      db.setIsNotReading(myChat.id);
     }
     super.deactivate();
   }
 
   @override
   Widget build(BuildContext context) {
+
     BlocProvider.of<MessageBloc>(context)
-        .add(MessageEvents(widget.myChat.id, false, false, true));
+        .add(MessageEvents(widget.chatId, false, false, true));
 
     db = Provider.of<FirestoreDatabase>(context, listen: false);
-
-    if (!widget.myChat.isGroupe) {
-      db.setIsReading(widget.myChat.id);
-      streamUserFriend = db.userFriendStream(widget.friend.id);
-      //context.select<FirestoreDatabase,void>((value) => null)
-    }
-
-    boolChatRoom = Provider.of<BoolToggle>(context, listen: false);
-
-    if(widget.myChat.isGroupe){
-      streamSubscription = db.chatUsersStream(widget.myChat)
-          .listen((users) {
-
-            membres = users;
-
-      });
-    }
-
-
 
     return Container(
       color: Theme.of(context).colorScheme.secondary,
       child: SafeArea(
-        child: Scaffold(
-            appBar: AppBar(
-                elevation: 0.4,
-                iconTheme: IconThemeData(color: Colors.black),
-                backgroundColor: Colors.white,
-                leading: IconButton(
-                    onPressed: () {
-                      ExtendedNavigator.of(context).pop();
-                    },
-                    icon: Icon(
-                      Platform.isAndroid
-                          ? Icons.arrow_back
-                          : Icons.arrow_back_ios,
-                      color: Colors.black,
-                    )),
-                title: Row(
-                  children: <Widget>[
-                    Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 5, 10, 0),
-                        child: CachedNetworkImage(
-                          imageUrl: !widget.myChat.isGroupe
-                              ? widget.friend.imageUrl
-                              : widget.myChat.imageUrl,
-                          imageBuilder: (context, imageProvider) => Container(
-                            height: 44,
-                            width: 44,
-                            decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(44)),
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Shimmer.fromColors(
-                            baseColor: Colors.white,
-                            highlightColor:
-                                Theme.of(context).colorScheme.primary,
-                            child: CircleAvatar(
-                              radius: 22,
-                            ),
-                          ),
-                          errorWidget: (context, url, error) =>
-                              Icon(Icons.error),
-                        )),
-                    Flexible(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            !widget.myChat.isGroupe
-                                ? widget.friend.nom
-                                : widget.myChat.titre,
-                            style: TextStyle(color: Colors.black),
-                          ),
-                          !widget.myChat.isGroupe
-                              ? StreamBuilder<User>(
-                                  stream: streamUserFriend,
-                                  builder: (context, snapshot) {
-                                    User user = snapshot.data;
+        child: BlocBuilder<MessageBloc, MessageState>(
+            builder: (BuildContext context, MessageState state) {
 
-                                    return user != null
-                                        ? Text(
-                                            user.isLogin
-                                                ? 'En ligne'
-                                                : isToday(user.lastActivity)
-                                                    ? 'Vu aujourd\'hui à ${DateFormat.Hm().format(user.lastActivity)}'
-                                                    : DateFormat('dd/MM/yy')
-                                                        .format(
-                                                            user.lastActivity),
-                                            style: TextStyle(
-                                                color: Colors.grey[400],
-                                                fontSize: 12),
-                                          )
-                                        : SizedBox();
-                                  })
-                              : SizedBox(),
-                        ],
+              if(state.isAllMessages){
+                initChat(state, context);
+              }
+
+            return myChat != null? Scaffold(
+                appBar: AppBar(
+                    elevation: 0.4,
+                    iconTheme: IconThemeData(color: Colors.black),
+                    backgroundColor: Colors.white,
+                    leading: IconButton(
+                        onPressed: () {
+                          ExtendedNavigator.of(context).pop();
+                        },
+                        icon: Icon(
+                          Platform.isAndroid
+                              ? Icons.arrow_back
+                              : Icons.arrow_back_ios,
+                          color: Colors.black,
+                        )),
+                    title: Row(
+                      children: <Widget>[
+                        Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 5, 10, 0),
+                            child: CachedNetworkImage(
+                              imageUrl: !myChat.isGroupe
+                                  ? friend.imageUrl
+                                  : myChat.imageUrl,
+                              imageBuilder: (context, imageProvider) => Container(
+                                height: 44,
+                                width: 44,
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(44)),
+                                  image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.white,
+                                highlightColor:
+                                    Theme.of(context).colorScheme.primary,
+                                child: CircleAvatar(
+                                  radius: 22,
+                                ),
+                              ),
+                              errorWidget: (context, url, error) =>
+                                  Icon(Icons.error),
+                            )),
+                        Flexible(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                !myChat.isGroupe
+                                    ? friend.nom
+                                    : myChat.titre,
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              !myChat.isGroupe
+                                  ? StreamBuilder<User>(
+                                      stream: streamUserFriend,
+                                      builder: (context, snapshot) {
+                                        User user = snapshot.data;
+
+                                        return user != null
+                                            ? Text(
+                                                user.isLogin
+                                                    ? 'En ligne'
+                                                    : isToday(user.lastActivity)
+                                                        ? 'Vu aujourd\'hui à ${DateFormat.Hm().format(user.lastActivity)}'
+                                                        : DateFormat('dd/MM/yy')
+                                                            .format(
+                                                                user.lastActivity),
+                                                style: TextStyle(
+                                                    color: Colors.grey[400],
+                                                    fontSize: 12),
+                                              )
+                                            : SizedBox();
+                                      })
+                                  : SizedBox(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )),
+                body: Column(
+                  //mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Flexible(
+                      fit: FlexFit.tight,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: BlocBuilder<MessageBloc, MessageState>(
+                          builder: (BuildContext context, MessageState state) {
+                            print('diana');
+                            if (state.isLoading) {
+
+                              return Center(
+                                child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).colorScheme.primary)),
+                              );
+                            } else if (state.isAllMessages) {
+
+                              print('coucou');
+
+                              
+                              //initChat(state, context);
+
+                              
+
+
+                              if (state.messages.isNotEmpty) {
+                                _messages.clear();
+                                _messages.addAll(state.messages);
+                                return returnMessages(false);
+                              } else {
+                                return Center(
+                                  child: Text(
+                                    'Pas de messages',
+                                    style: Theme.of(context).textTheme.subtitle2,
+                                  ),
+                                );
+                              }
+                            } else if (state.isNewMessage) {
+
+                              lastMessage = state.newMessage;
+                              WidgetsBinding.instance
+                                  .addPostFrameCallback(_afterLayout);
+                              return returnMessages(true);
+                            } else if (state.hasError) {
+                              return Center(
+                                child: Text(
+                                  'Erreur de connexion',
+                                  style: Theme.of(context).textTheme.subtitle2,
+                                ),
+                              );
+                            }
+                            return Center(
+                              child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).colorScheme.primary)),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Divider(
+                      height: 1.0,
+                      thickness: 2,
+                    ),
+                    Container(
+                        decoration:
+                            BoxDecoration(color: Theme.of(context).cardColor),
+                        child: _buildTextComposer(db, boolChatRoom)),
+                    Container(
+                      color: Colors.green,
+                      child: Consumer<BoolToggle>(
+                        builder: (context, boolChatRoom, child) {
+                          return boolChatRoom.showEmojiContainer
+                              ? emojiContainer(boolChatRoom)
+                              : SizedBox();
+                        },
                       ),
                     ),
                   ],
-                )),
-            body: Column(
-              //mainAxisAlignment: MainAxisAlignment.end,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Flexible(
-                  fit: FlexFit.tight,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: BlocBuilder<MessageBloc, MessageState>(
-                      builder: (BuildContext context, MessageState state) {
-                        print(state);
-
-                        if (state.isLoading) {
-                          return Center(
-                            child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Theme.of(context).colorScheme.primary)),
-                          );
-                        } else if (state.isAllMessages) {
-                          if (state.messages.isNotEmpty) {
-                            _messages.addAll(state.messages);
-                            return returnMessages(false);
-                          } else {
-
-
-                            return Center(
-                              child: Text(
-                                'Pas de messages',
-                                style: Theme.of(context).textTheme.subtitle2,
-                              ),
-                            );
-                          }
-                        } else if (state.isNewMessage) {
-                          print('//');
-                          if (state.chatId == widget.myChat.id) {
-                            lastMessage = state.newMessage;
-                            WidgetsBinding.instance
-                                .addPostFrameCallback(_afterLayout);
-                            return returnMessages(true);
-                          }
-                        } else if (state.hasError) {
-                          return Center(
-                            child: Text(
-                              'Erreur de connexion',
-                              style: Theme.of(context).textTheme.subtitle2,
-                            ),
-                          );
-                        }
-                        return returnMessages(false);
-                      },
-                    ),
-                  ),
-                ),
-                Divider(
-                  height: 1.0,
-                  thickness: 2,
-                ),
-                Container(
-                    decoration:
-                        BoxDecoration(color: Theme.of(context).cardColor),
-                    child: _buildTextComposer(db, boolChatRoom)),
-                Container(
-                  color: Colors.green,
-                  child: Consumer<BoolToggle>(
-                    builder: (context, boolChatRoom, child) {
-                      return boolChatRoom.showEmojiContainer
-                          ? emojiContainer(boolChatRoom)
-                          : SizedBox();
-                    },
-                  ),
-                ),
-              ],
-            )),
+                )): Center(
+              child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.primary)),
+            );
+          }
+        ),
       ),
     );
   }
 
+  void initChat(MessageState state, BuildContext context) {
+    myChat = state.myChat;
+    membres = state.membres;
+    
+    friend = state.membres.firstWhere(
+            (user) => user.id != db.uid);
+    
+    if (!myChat.isGroupe) {
+      db.setIsReading(myChat.id);
+      streamUserFriend = db.userFriendStream(friend.id);
+      //context.select<FirestoreDatabase,void>((value) => null)
+    }
+    
+    boolChatRoom = Provider.of<BoolToggle>(context, listen: false);
+    
+    if (myChat.isGroupe) {
+      streamSubscription = db.chatUsersStream(myChat).listen((users) {
+        membres = users;
+      });
+    }
+  }
+
   Widget returnMessages(bool isNew) {
-    return _messages.isNotEmpty
+
+    return _messages.isNotEmpty || lastMessage!= null
         ? AnimatedList(
             initialItemCount: _messages.length,
             key: listKey,
@@ -340,8 +374,9 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
             reverse: true,
             itemBuilder:
                 (BuildContext context, int index, Animation<double> animation) {
-              
-              User userFrom = membres.firstWhere((user) => user.id == _messages[index].idFrom );
+
+              User userFrom = membres
+                  .firstWhere((user) => user.id == _messages[index].idFrom);
 
               return SizeTransition(
                   axis: Axis.vertical,
@@ -360,8 +395,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                             ChatMessageListItem(
                                 _messages[index],
                                 db.uid == _messages[index].idFrom,
-                                widget.myChat.id,
-                                widget.myChat.isGroupe,
+                                myChat.id,
+                                myChat.isGroupe,
                                 userFrom.nom,
                                 //name
                                 userFrom.imageUrl,
@@ -373,13 +408,13 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                       : ChatMessageListItem(
                           _messages[index],
                           db.uid == _messages[index].idFrom,
-                          widget.myChat.id,
-                          widget.myChat.isGroupe,
-                      userFrom.nom,
-                      //name
-                      userFrom.imageUrl,
-                      isNew,
-                      _messages[index].idTo //url
+                          myChat.id,
+                          myChat.isGroupe,
+                          userFrom.nom,
+                          //name
+                          userFrom.imageUrl,
+                          isNew,
+                          _messages[index].idTo //url
                           ));
             },
           )
@@ -463,6 +498,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
       }
     }
 
+
     return b;
   }
 
@@ -472,7 +508,6 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
     if (date.day == DateTime.now().day) {
       b = true;
     }
-    print(date.day);
 
     return b;
   }
@@ -495,33 +530,28 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   }
 
   void displayAndSendImage(File image, FirestoreDatabase db) {
-      String path = image.path;
-    
+    String path = image.path;
+
     print(path.substring(path.lastIndexOf('/') + 1));
-    
+
     String idTo;
-    
-    if(!widget.myChat.isGroupe){
-      idTo = widget.friend.id;
+
+    if (!myChat.isGroupe) {
+      idTo = friend.id;
     }
-    
+
     MyMessage myMessage = MyMessage(
-        id: path,
-        idTo: idTo,
-        idFrom: db.uid,
-        type: 1,
-        date: DateTime.now());
-    
+        id: path, idTo: idTo, idFrom: db.uid, type: 1, date: DateTime.now());
+
     boolChatRoom.addListPhoto(path, image);
     boolChatRoom.addTempMessage(path);
-    
+
     BlocProvider.of<MessageBloc>(context).add(MessageEvents(
-        widget.myChat.id, false, true, false,
+        myChat.id, false, true, false,
         message: myMessage));
-    
+
     db
-        .uploadImageChat(
-            context, image, widget.myChat.id, db.uid, idTo)
+        .uploadImageChat(context, image, myChat.id, db.uid, idTo)
         .then((_) => boolChatRoom.setTempMessageToloaded(path))
         .catchError((e) {
       print(e);
@@ -656,17 +686,16 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
     if (gif != null) {
       String messageId = Firestore.instance
           .collection('chats')
-          .document(widget.myChat.id)
+          .document(myChat.id)
           .collection('messages')
           .document()
           .documentID;
 
       String idTo;
 
-      if(!widget.myChat.isGroupe){
-        idTo = widget.friend.id;
+      if (!myChat.isGroupe) {
+        idTo = friend.id;
       }
-
       MyMessage myMessage = MyMessage(
           id: messageId,
           message: gif.images.original.url,
@@ -676,10 +705,10 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
           date: DateTime.now());
 
       BlocProvider.of<MessageBloc>(context).add(MessageEvents(
-          widget.myChat.id, false, true, false,
+          myChat.id, false, true, false,
           message: myMessage));
 
-      db.sendMessage(widget.myChat.id, messageId, db.uid,
+      db.sendMessage(myChat.id, messageId, db.uid,
           gif.images.original.url, idTo, 2);
     }
   }
@@ -687,17 +716,16 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
   void _sendMessage(String text, FirestoreDatabase db) {
     String messageId = Firestore.instance
         .collection('chats')
-        .document(widget.myChat.id)
+        .document(myChat.id)
         .collection('messages')
         .document()
         .documentID;
 
     String idTo;
 
-    if(!widget.myChat.isGroupe){
-      idTo = widget.friend.id;
+    if (!myChat.isGroupe) {
+      idTo = friend.id;
     }
-
     MyMessage myMessage = MyMessage(
         id: messageId,
         message: text,
@@ -705,18 +733,18 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
         idFrom: db.uid,
         type: 0,
         date: DateTime.now());
+
     boolChatRoom.addTempMessage(myMessage.id);
 
     BlocProvider.of<MessageBloc>(context).add(MessageEvents(
-        widget.myChat.id, false, true, false,
+        myChat.id, false, true, false,
         message: myMessage)); //affichage immediat du message
 
     if (text.trim() != '') {
       boolChatRoom.setShowSendButtonTo(false);
       _textEditingController.clear();
       db
-          .sendMessage(
-              widget.myChat.id, messageId, db.uid, text, idTo, 0)
+          .sendMessage(myChat.id, messageId, db.uid, text, idTo, 0)
           .catchError((err) {
         boolChatRoom.setShowSendButtonTo(true);
         boolChatRoom.setTempMessageToError(myMessage.id);
@@ -730,6 +758,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
       print('Text vide ou null');
     }
   }
+
+
 }
 
 class ChatMessageListItem extends StatefulWidget {
@@ -742,15 +772,8 @@ class ChatMessageListItem extends StatefulWidget {
   final bool isNew;
   final String idFrom;
 
-  ChatMessageListItem(
-      this.message,
-      this.isMe,
-      this.chatId,
-      this.isGroupe,
-      this.friendName,
-      this.friendUrl,
-      this.isNew,
-      this.idFrom);
+  ChatMessageListItem(this.message, this.isMe, this.chatId, this.isGroupe,
+      this.friendName, this.friendUrl, this.isNew, this.idFrom);
 
   @override
   _ChatMessageListItemState createState() => _ChatMessageListItemState();
@@ -888,7 +911,7 @@ class _ChatMessageListItemState extends State<ChatMessageListItem> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: <Widget>[
-                              !boolChatRoom.listPhoto.containsKey(id)
+                              !boolChatRoom.listPhoto.containsKey(id) && widget.message.message != null
                                   ? CachedNetworkImage(
                                       placeholder: (context, url) =>
                                           Shimmer.fromColors(

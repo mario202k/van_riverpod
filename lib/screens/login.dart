@@ -4,38 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:provider/provider.dart';
 import 'package:vanevents/routing/route.gr.dart';
-import 'package:vanevents/services/firebase_auth_service.dart';
 import 'package:vanevents/shared/card_form.dart';
 
-class Login extends StatefulWidget {
+class LoginForm extends StatefulWidget {
   @override
-  _LoginState createState() => _LoginState();
+  _LoginFormState createState() => _LoginFormState();
 }
 
-class _LoginState extends State<Login> {
+class _LoginFormState extends State<LoginForm> {
 
-  FirebaseAuthService auth;
 
   @override
   void initState() {
-
 
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Theme.of(context).colorScheme.primary,
-      statusBarIconBrightness: Theme.of(context).colorScheme.brightness,
-      systemNavigationBarColor: Theme.of(context).colorScheme.primary,
-      systemNavigationBarIconBrightness:
-      Theme.of(context).colorScheme.brightness,
-    ));
-    auth = Provider.of<FirebaseAuthService>(context, listen: false);
 
     return Container(
       color: Theme.of(context).colorScheme.secondary,
@@ -70,7 +57,8 @@ class _LoginState extends State<Login> {
                                   'assets/animations/dance.flr',
                                   alignment: Alignment.center,
                                   animation: 'dance',
-                                )),
+                                )
+                            ),
                           ),
                         ),
                       ),
@@ -146,7 +134,7 @@ class _LoginState extends State<Login> {
                                     ),
                                     FloatingActionButton(
                                         onPressed: () {
-                                          auth.googleSignIn(context);
+                                          //auth.googleSignIn(context);
                                         },
                                         backgroundColor: Colors.red.shade700,
                                         child: Icon(

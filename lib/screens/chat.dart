@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:badges/badges.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -11,20 +12,37 @@ import 'package:vanevents/models/my_chat.dart';
 import 'package:vanevents/models/message.dart';
 import 'package:vanevents/models/user.dart';
 import 'package:vanevents/routing/route.gr.dart';
+import 'package:vanevents/services/firebase_cloud_messaging.dart';
 import 'package:vanevents/services/firestore_database.dart';
+import 'package:vanevents/shared/call_utilities.dart';
+import 'package:vanevents/shared/my_event_search_chat.dart';
 import 'package:vanevents/shared/topAppBar.dart';
+import 'dart:math' as math;
+
+import 'package:vanevents/shared/user_search_chat.dart';
 
 class Chat extends StatefulWidget with NavigationStates {
   @override
   _ChatState createState() => _ChatState();
 }
 
-class _ChatState extends State<Chat> with TickerProviderStateMixin {
+class _ChatState extends State<Chat> with SingleTickerProviderStateMixin {
   Stream<List<MyChat>> allChat;
   Stream<List<User>> streamUserFriend;
+  AnimationController _animationController;
+  final double maxSlide = 60.0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+        duration: const Duration(milliseconds: 400), vsync: this);
+  }
 
   @override
   void dispose() {
+    _animationController.dispose();
     if (allChat != null) {
       allChat = null;
     }
@@ -35,66 +53,84 @@ class _ChatState extends State<Chat> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<FirestoreDatabase>(context, listen: false);
+    final user = Provider.of<User>(context, listen: false);
     allChat = db.chatRoomsStream();
 
     return Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.background,
-        appBar: PreferredSize(
-          preferredSize: Size(double.infinity, 100),
-          child: TopAppBar('Chat', true, double.infinity),
-        ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                    minWidth: constraints.maxWidth,
-                    minHeight: constraints.maxHeight),
-                child: StreamBuilder<List<Object>>(
-                  stream: allChat,
-                  //qui ont deja discuter
-                  initialData: [],
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text('Erreur de connexion'),
-                      );
-                    } else if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).colorScheme.secondary)),
-                      );
-                    }
-                    List<MyChat> myChat = snapshot.data;
-                    return myChat.isNotEmpty
-                        ? ListView.separated(
-                            shrinkWrap: true,
-                            separatorBuilder: (context, index) => Divider(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  thickness: 1,
-                                ),
-                            itemCount: myChat.length,
-                            itemBuilder: (context, index) {
-                              MyChat chat = myChat.elementAt(index);
+      backgroundColor: Theme.of(context).colorScheme.background,
+      appBar: PreferredSize(
+        preferredSize: Size(double.infinity, 100),
+        child: TopAppBar('Chat', true, double.infinity),
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                  minWidth: constraints.maxWidth,
+                  minHeight: constraints.maxHeight),
+              child: StreamBuilder<List<Object>>(
+                stream: allChat,
+                //qui ont deja discuter
+                initialData: [],
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    print(snapshot.error);
+                    return Center(
+                      child: Text('Erreur de connexion'),
+                    );
+                  } else if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.secondary)),
+                    );
+                  }
+                  List<MyChat> myChat = snapshot.data;
+                  return myChat.isNotEmpty
+                      ? ListView.separated(
+                          shrinkWrap: true,
+                          separatorBuilder: (context, index) => Divider(
+                                color: Theme.of(context).colorScheme.primary,
+                                thickness: 1,
+                              ),
+                          itemCount: myChat.length,
+                          itemBuilder: (context, index) {
+                            MyChat chat = myChat.elementAt(index);
 
-                              streamUserFriend = db.chatUsersStream(chat);
+                            streamUserFriend = db.chatUsersStream(chat);
 //
-                              Stream<MyMessage> lastMsg =
-                                  db.getLastChatMessage(chat.id);
+                            Stream<MyMessage> lastMsg =
+                                db.getLastChatMessage(chat.id);
 
-                              Stream<int> msgNonLu =
-                                  db.getChatMessageNonLu(chat.id);
+                            Stream<int> msgNonLu =
+                                db.getChatMessageNonLu(chat.id);
+                            User userFriend;
 
-                              return StreamBuilder<List<User>>(
+                            return Slidable(
+                              actionPane: SlidableDrawerActionPane(),
+                              actionExtentRatio: 0.15,
+                              actions: <Widget>[
+                                IconSlideAction(
+                                  caption: 'Call',
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                  icon: FontAwesomeIcons.phone,
+                                  onTap: () => CallUtils.dial(
+                                      from: user,
+                                      to: userFriend,
+                                      context: context),
+                                ),
+                              ],
+                              child: StreamBuilder<List<User>>(
                                   stream: streamUserFriend,
                                   builder: (context, snapshot) {
-                                    if (!snapshot.hasData) {
+                                    if (!snapshot.hasData || snapshot.data == null) {
                                       return SizedBox();
                                     }
                                     List<User> users = snapshot.data;
-                                    User userFriend;
+
                                     if (!chat.isGroupe) {
                                       userFriend = users.firstWhere(
                                           (user) => user.id != db.uid);
@@ -108,21 +144,165 @@ class _ChatState extends State<Chat> with TickerProviderStateMixin {
 
                                     return buildListTile(titre, chat, users,
                                         lastMsg, userFriend, msgNonLu);
+                                  }),
+                            );
+                          })
+                      : Center(
+                          child: Text(
+                            'Pas de conversation',
+                            style: Theme.of(context).textTheme.headline4,
+                          ),
+                        );
+                },
+              ),
+            ),
+          );
+        },
+      ),
+      floatingActionButton: AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, _) {
+            return Container(
+              width: 120,
+              height: 120,
+              child: Stack(
+                overflow: Overflow.visible,
+                children: <Widget>[
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Transform.translate(
+                      offset: Offset(-maxSlide * _animationController.value, 0),
+                      child: Transform.rotate(
+                        angle: _animationController.value * 2.0 * math.pi,
+                        child: Transform.scale(
+                          scale: _animationController.value,
+                          child: FloatingActionButton(
+                              heroTag: 1,
+                              child: Icon(
+                                FontAwesomeIcons.userFriends,
+                                color:
+                                    Theme.of(context).colorScheme.onSecondary,
+                              ),
+                              onPressed: () async {
+                                final User userFriend = await showSearch(
+                                    context: context,
+                                    delegate: UserSearch(UserBlocSearchName()));
+
+                                if (userFriend != null) {
+                                  db
+                                      .creationChatRoom(userFriend)
+                                      .then((chatId) {
+                                    db.getMyChat(chatId).then((myChat) {
+                                      db.chatUsersFuture(myChat).then((users) {
+                                        User friend;
+                                        if (!myChat.isGroupe) {
+                                          friend = users.firstWhere(
+                                              (user) => user.id != db.uid);
+                                        }
+                                        ExtendedNavigator.of(context).pushNamed(
+                                            Routes.chatRoom,
+                                            arguments: ChatRoomArguments(
+                                                chatId: chatId));
+                                      }).catchError((onError) {
+                                        print(onError);
+                                      });
+                                    }).catchError((onError) {
+                                      print(onError);
+                                    });
+                                  }).catchError((onError) {
+                                    print(onError);
                                   });
-                            })
-                        : Center(
-                            child: Text(
-                              'Pas de conversation',
-                              style: Theme.of(context).textTheme.headline4,
-                            ),
-                          );
-                  },
-                ),
+                                }
+                                //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                              }),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Transform.translate(
+                      offset: Offset(0, -maxSlide * _animationController.value),
+                      child: Transform.rotate(
+                        angle: _animationController.value * 2.0 * math.pi,
+                        child: Transform.scale(
+                          scale: _animationController.value,
+                          child: FloatingActionButton(
+                              heroTag: 2,
+                              child: Icon(
+                                FontAwesomeIcons.users,
+                                color:
+                                    Theme.of(context).colorScheme.onSecondary,
+                              ),
+                              onPressed: () async {
+                                await showSearch(
+                                        context: context,
+                                        delegate: MyEventSearch(
+                                            MyEventBlocSearchName()))
+                                    .then((myEvent) async {
+                                  if (myEvent != null) {
+                                    await db
+                                        .addAmongGroupe(myEvent.chatId)
+                                        .then((_) {
+                                      db
+                                          .getMyChat(myEvent.chatId)
+                                          .then((myChat) {
+                                        db
+                                            .chatUsersFuture(myChat)
+                                            .then((users) {
+                                          User friend;
+                                          if (!myChat.isGroupe) {
+                                            friend = users.firstWhere(
+                                                (user) => user.id != db.uid);
+                                          }
+                                          ExtendedNavigator.of(context)
+                                              .pushNamed(Routes.chatRoom,
+                                                  arguments: ChatRoomArguments(
+                                                      chatId: myChat.id));
+                                        });
+                                      });
+                                    });
+                                  }
+                                });
+                              }
+                              //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                              ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: FloatingActionButton(
+                        heroTag: 3,
+                        child: Icon(
+                          FontAwesomeIcons.search,
+                          color: Theme.of(context).colorScheme.onSecondary,
+                        ),
+                        onPressed: () {
+
+                          //NotificationHandler().showOverlayWindow();
+
+                          //toggleMenu();
+                        }
+                        //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                        ),
+                  ),
+                ],
               ),
             );
-          },
-        ));
+          }),
+    );
   }
+
+  void close() => _animationController.reverse();
+
+  void open() => _animationController.forward();
+
+  void toggleMenu() => _animationController.isCompleted ? close() : open();
 
   ListTile buildListTile(String titre, MyChat chat, List<User> users,
       Stream<MyMessage> lastMsg, User friend, Stream<int> msgNonLu) {
@@ -144,8 +324,7 @@ class _ChatState extends State<Chat> with TickerProviderStateMixin {
           }),
       onTap: () {
         ExtendedNavigator.of(context).pushNamed(Routes.chatRoom,
-            arguments: ChatRoomArguments(
-                myChat: chat, membres: users, friend: friend));
+            arguments: ChatRoomArguments(chatId: chat.id));
       },
 
       leading: Stack(

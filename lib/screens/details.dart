@@ -1,10 +1,12 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:share_extend/share_extend.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:vanevents/models/event.dart';
 import 'package:vanevents/models/formule.dart';
 import 'package:vanevents/models/user.dart';
@@ -70,9 +72,10 @@ class _DetailsState extends State<Details> {
                     centerTitle: true,
                     title: Text(widget.event.titre,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.headline),
+                        style: Theme.of(context).textTheme.bodyText1.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimary)),
                     background: Image(
-                      image: NetworkImage(widget.event.imageUrl),
+                      image: NetworkImage(widget.event.imageFlyerUrl),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -80,7 +83,7 @@ class _DetailsState extends State<Details> {
               ];
             },
             body: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 35),
+              padding: EdgeInsets.symmetric(horizontal: 25),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -98,10 +101,13 @@ class _DetailsState extends State<Details> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                           // "${DateFormat('dd/MM/yyyy').format(widget.event.dateDebut)} à : ${widget.event.dateDebut.hour}:${widget.event.dateDebut.minute}"
-                          '${DateFormat('dd/MM/yyyy').format(widget.event.dateDebut)} à : ${DateFormat('HH').format(widget.event.dateDebut)}h${DateFormat('mm').format(widget.event.dateDebut)}'
-                          ,
-                          style: Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black),),
+                          // "${DateFormat('dd/MM/yyyy').format(widget.event.dateDebut)} à : ${widget.event.dateDebut.hour}:${widget.event.dateDebut.minute}"
+                          '${DateFormat('dd/MM/yyyy').format(widget.event.dateDebut)} à : ${DateFormat('HH').format(widget.event.dateDebut)}h${DateFormat('mm').format(widget.event.dateDebut)}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyText1
+                              .copyWith(color: Colors.black),
+                        ),
                       ),
                     ],
                   ),
@@ -124,7 +130,7 @@ class _DetailsState extends State<Details> {
                               Icons.calendar_today,
                               color: Theme.of(context).colorScheme.primary,
                             ),
-                            label: Text("Plannifier")),
+                            label: Flexible(child: Text("Plannifier",))),
                       ),
                       Expanded(
                         child: FlatButton.icon(
@@ -145,7 +151,7 @@ class _DetailsState extends State<Details> {
                               Icons.map,
                               color: Theme.of(context).colorScheme.primary,
                             ),
-                            label: Text("Y aller")),
+                            label: Flexible(child: Text("Y aller"))),
                       ),
                     ],
                   ),
@@ -161,11 +167,16 @@ class _DetailsState extends State<Details> {
                     padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
                     child: new Text(
                       "Description",
-                      style: Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black,fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.bodyText1.copyWith(
+                          color: Colors.black, fontWeight: FontWeight.w600),
                     ),
                   ),
                   Text(
-                    widget.event.description,style: Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black,fontSize: 20) ,
+                    widget.event.description,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyText1
+                        .copyWith(color: Colors.black, fontSize: 20),
                   ),
                   SizedBox(
                     height: 25,
@@ -179,8 +190,70 @@ class _DetailsState extends State<Details> {
                     height: 25,
                   ),
                   Text(
+                    "Photos",
+                    style: Theme.of(context).textTheme.bodyText1.copyWith(
+                        color: Colors.black, fontWeight: FontWeight.w600),
+                  ),
+
+                  GridView.builder(
+                      itemCount: widget.event.imagePhotos.length,
+                      shrinkWrap: true,
+                      physics: ClampingScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount:
+                          (MediaQuery.of(context).orientation == Orientation.landscape) ? 3 : 2),
+                      itemBuilder: (BuildContext context, int index) {
+                        return CachedNetworkImage(
+                          placeholder: (context, url) =>
+                              Shimmer.fromColors(
+                                baseColor: Colors.white,
+                                highlightColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary,
+                                child: Container(
+                                    height: 300,
+                                    width: 300,
+                                    color: Colors.white),
+                              ),
+                          imageBuilder: (context, imageProvider) =>
+                              SizedBox(
+                                  height: 300,
+                                  width: 300,
+                                  child: Image(image: imageProvider,fit: BoxFit.fitHeight,),
+                              ),
+                          errorWidget: (context, url, error) =>
+                              Material(
+                                child: Image.asset(
+                                  'assets/img/img_not_available.jpeg',
+                                  width: 300.0,
+                                  height: 300.0,
+                                  fit: BoxFit.cover,
+                                ),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(8.0),
+                                ),
+                                clipBehavior: Clip.hardEdge,
+                              ),
+                          imageUrl: widget.event.imagePhotos[index],
+                          fit: BoxFit.scaleDown,
+                        );
+
+
+                      }),
+
+
+                  Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle, color: Colors.black26),
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  Text(
                     "Participants",
-                    style: Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black,fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.bodyText1.copyWith(
+                        color: Colors.black, fontWeight: FontWeight.w600),
                   ),
                   Container(
                     height: 200,
@@ -270,8 +343,7 @@ class _DetailsState extends State<Details> {
                     PulseAnimation(
                       child: Text(
                         "PARTICIPER",
-                        style: TextStyle(
-                            color: Colors.white, fontSize: 20),
+                        style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
                     ),
                   ],
@@ -284,7 +356,7 @@ class _DetailsState extends State<Details> {
                     arguments: FormulaChoiceArguments(
                         formulas: formulas,
                         eventId: widget.event.id,
-                        imageUrl: widget.event.imageUrl));
+                        imageUrl: widget.event.imageFlyerUrl));
               }),
         ),
       ),
