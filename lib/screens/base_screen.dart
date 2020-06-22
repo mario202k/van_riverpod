@@ -1,20 +1,24 @@
 import 'package:after_init/after_init.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:vanevents/bloc/navigation_bloc/navigation_bloc.dart';
+import 'package:vanevents/models/user.dart';
+import 'package:vanevents/routing/route.gr.dart';
 import 'package:vanevents/screens/model_body.dart';
 import 'package:vanevents/screens/model_screen.dart';
 import 'package:vanevents/services/firebase_cloud_messaging.dart';
 import 'package:vanevents/services/firestore_database.dart';
+import 'package:vanevents/shared/my_event_search_chat.dart';
 import 'package:vanevents/shared/topAppBar.dart';
+import 'dart:math' as math;
+
+import 'package:vanevents/shared/user_search_chat.dart';
 
 class BaseScreens extends StatefulWidget {
-
   BaseScreens();
 
   @override
@@ -22,22 +26,26 @@ class BaseScreens extends StatefulWidget {
 }
 
 class _BaseScreensState extends State<BaseScreens>
-    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin, AfterInitMixin {
-  final FirebaseMessaging _fcm = FirebaseMessaging();
+    with
+        WidgetsBindingObserver,
+        AfterInitMixin,
+        TickerProviderStateMixin {
+  AnimationController _animationController;
+  final double maxSlide = 60.0;
 
+  TabController tabController;
 
   @override
   void initState() {
     print('Basescreen');
+    tabController = TabController(length: 2, vsync: this);
+    _animationController = AnimationController(
+        duration: const Duration(milliseconds: 400), vsync: this);
 
-
-
-    //registerNotification(widget.uid);
-
-    //WidgetsBinding.instance.addPostFrameCallback(_afterLayout);
     WidgetsBinding.instance.addObserver(this);
     super.initState();
   }
+
 //
   @override
   void didInitState() {
@@ -49,147 +57,16 @@ class _BaseScreensState extends State<BaseScreens>
     //NotificationApnHandler().initializeApnNotification(user.id,context);
   }
 
-  void initNotification() async{
-
-    NotificationHandler().initializeFcmNotification(context.read<FirestoreDatabase>().uid,context);
+  void initNotification() async {
+    NotificationHandler().initializeFcmNotification(
+        context.read<FirestoreDatabase>().uid, context);
   }
-
-
-//  subscribeTo() async {
-//    SharedPreferences prefs = await SharedPreferences.getInstance();
-//    bool isSubscribe = prefs.getBool('VanEvent') ?? true;
-//
-//    if (isSubscribe) {
-//      _fcm.subscribeToTopic('VanEvent');
-//      prefs.setBool('VanEvent', true);
-//    } else {
-//      _fcm.unsubscribeFromTopic('VanEvent');
-//      prefs.setBool('VanEvent', false);
-//    }
-//  }
-
-//  void registerNotification(String id) {
-//    if (Platform.isIOS) {
-//      _fcm.requestNotificationPermissions(
-//          IosNotificationSettings(sound: true, badge: true, alert: true));
-//      _fcm.onIosSettingsRegistered.listen((data) {
-//        // save the token  OR subscribe to a topic here
-//        _saveDeviceToken(id);
-//      });
-//    } else {
-//      _saveDeviceToken(id);
-//    }
-//    print('registerNotification');
-//
-//    _fcm.configure(
-//      onMessage: (Map<String, dynamic> message) async {
-//        MyMessage myMessage = MyMessage.fromMapFcm(message);
-//        print(myMessage.message);
-//        print(message['data']['chatId']);
-//
-//        BlocProvider.of<MessageBloc>(context).add(
-//            MessageEvents(message['data']['chatId'], true, message: myMessage));
-//      },
-//      onBackgroundMessage: Platform.isIOS ? null : myBackgroundMessageHandler,
-//      onLaunch: (Map<String, dynamic> message) async {
-//        print('onLaunch');
-//        MyMessage myMessage = MyMessage.fromMapFcm(message);
-//        print(myMessage.message);
-//        print(message['data']['chatId']);
-//
-//        BlocProvider.of<MessageBloc>(context).add(
-//            MessageEvents(message['data']['chatId'], true, message: myMessage));
-//      },
-//      onResume: (Map<String, dynamic> message) async {
-//        MyMessage myMessage = MyMessage.fromMapFcm(message);
-//        print(myMessage.message);
-//        print(message['data']['chatId']);
-//
-//        BlocProvider.of<MessageBloc>(context).add(
-//            MessageEvents(message['data']['chatId'], true, message: myMessage));
-//      },
-//    );
-//  }
-//
-//  void configLocalNotification() {
-//    var initializationSettingsAndroid =
-//    AndroidInitializationSettings('app_icon');
-//    var initializationSettingsIOS = IOSInitializationSettings(
-//        onDidReceiveLocalNotification: onDidReceiveLocalNotification);
-//    var initializationSettings = InitializationSettings(
-//        initializationSettingsAndroid, initializationSettingsIOS);
-//    FlutterLocalNotificationsPlugin().initialize(initializationSettings,
-//        onSelectNotification: onSelectNotification);
-//  }
-//
-//  void showNotification(Map<String, dynamic> message) async {
-//    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-//        'com.vaninamario.crossroads_events',
-//        'Crossroads Events',
-//        'your channel description',
-//        playSound: true,
-//        enableVibration: true,
-//        importance: Importance.Max,
-//        priority: Priority.High,
-//        ticker: 'ticker');
-//    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-//    var platformChannelSpecifics = NotificationDetails(
-//        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-//
-//    await FlutterLocalNotificationsPlugin().show(
-//        0,
-//        message['notification']['title'],
-//        message['data']['type'] == '0'
-//            ? message['notification']['body']
-//            : 'image',
-//        platformChannelSpecifics,
-//        payload: '');
-//  }
-//
-//  Future onDidReceiveLocalNotification(
-//      int id, String title, String body, String payload) {}
-//
-//  Future onSelectNotification(String payload) async {
-//    if (payload != null) {
-//      debugPrint('notification payload: ' + payload);
-//    }
-//    //await Router.navigator.pushNamed(Routes.baseScreens);
-//    await ExtendedNavigator.of(context).pushNamed(Routes.baseScreens);
-//    //await Navigator.of(context).pushNamed(Router.baseScreens);
-//  }
-//
-//  _saveDeviceToken(String uid) async {
-//    _fcm.getToken().then((fcmToken) async {
-//      Firestore.instance
-//          .collection('users')
-//          .document(uid)
-//          .collection('tokens')
-//          .document(fcmToken)
-//          .setData({
-//        'token': fcmToken,
-//        'createAt': FieldValue.serverTimestamp(),
-//        'platform': Platform.operatingSystem
-//      });
-//    }).catchError((err) {
-//      Scaffold.of(context).showSnackBar(SnackBar(
-//          backgroundColor: Theme.of(context).colorScheme.error,
-//          duration: Duration(seconds: 3),
-//          content: Text(
-//            err.message.toString(),
-//            textAlign: TextAlign.center,
-//            style: TextStyle(
-//                color: Theme.of(context).colorScheme.onError, fontSize: 16.0),
-//          )));
-//    });
-//
-//    //subscribeTo();
-//  }
 
 
   @override
   void dispose() {
+    _animationController.dispose();
     WidgetsBinding.instance.removeObserver(this);
-
 
     super.dispose();
   }
@@ -213,16 +90,15 @@ class _BaseScreensState extends State<BaseScreens>
     }
   }
 
-  _afterLayout(_) {
+  void close() => _animationController.reverse();
 
-//
-//    MySingletonFCM(user.id, context).registerNotification(user.id);
-//    MySingletonFCM(user.id, context).configLocalNotification();
-  }
+  void open() => _animationController.forward();
+
+  void toggleMenu() => _animationController.isCompleted ? close() : open();
 
   @override
   Widget build(BuildContext context) {
-
+    final db = Provider.of<FirestoreDatabase>(context, listen: false);
     return BlocBuilder<NavigationBloc, NavigationStates>(
         builder: (BuildContext context, NavigationStates state) {
       print(state.toString());
@@ -243,58 +119,238 @@ class _BaseScreensState extends State<BaseScreens>
       }
 
       return ModelScreen(
-        child: Scaffold(
+        child: Stack(
+          children: <Widget>[
+            ModelBody(child: state as Widget),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: CurvedNavigationBar(
+                backgroundColor: Theme.of(context).colorScheme.background,
+                index: i,
+                color: Theme.of(context).colorScheme.primary,
+                height: 45,
+                onTap: (index) {
+                  switch (index) {
+                    case 0:
+                      BlocProvider.of<NavigationBloc>(context)
+                          .add(NavigationEvents.HomeEvents);
+                      break;
+                    case 1:
+                      BlocProvider.of<NavigationBloc>(context)
+                          .add(NavigationEvents.Chat);
+                      break;
+                    case 2:
+                      BlocProvider.of<NavigationBloc>(context)
+                          .add(NavigationEvents.Billets);
+                      break;
+                    case 3:
+                      BlocProvider.of<NavigationBloc>(context)
+                          .add(NavigationEvents.Profil);
+                      break;
+                  }
+                },
+                items: <Widget>[
+                  Icon(
+                    FontAwesomeIcons.home,
+                    size: 30,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                  Icon(
+                    FontAwesomeIcons.comments,
+                    size: 30,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                  Icon(
+                    FontAwesomeIcons.ticketAlt,
+                    size: 30,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                  Icon(
+                    FontAwesomeIcons.user,
+                    size: 30,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ],
+              ),
+            ),
+            TopAppBar(state.toString(), true, double.infinity),
+            state.toString() == 'Chat'
+                ? Positioned(
+                    right: 15,
+                    bottom: 60,
+                    child: AnimatedBuilder(
+                        animation: _animationController,
+                        builder: (context, _) {
+                          return Container(
+                            width: 120,
+                            height: 120,
+                            child: Stack(
+                              overflow: Overflow.visible,
+                              children: <Widget>[
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Transform.translate(
+                                    offset: Offset(
+                                        -maxSlide * _animationController.value,
+                                        0),
+                                    child: Transform.rotate(
+                                      angle: _animationController.value *
+                                          2.0 *
+                                          math.pi,
+                                      child: Transform.scale(
+                                        scale: _animationController.value,
+                                        child: FloatingActionButton(
+                                            heroTag: 1,
+                                            child: Icon(
+                                              FontAwesomeIcons.userFriends,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSecondary,
+                                            ),
+                                            onPressed: () async {
+                                              final User userFriend =
+                                                  await showSearch(
+                                                      context: context,
+                                                      delegate: UserSearch(
+                                                          UserBlocSearchName()));
 
+                                              if (userFriend != null) {
+                                                db
+                                                    .creationChatRoom(
+                                                        userFriend)
+                                                    .then((chatId) {
+                                                  db
+                                                      .getMyChat(chatId)
+                                                      .then((myChat) {
+                                                    db
+                                                        .chatUsersFuture(myChat)
+                                                        .then((users) {
+                                                      User friend;
+                                                      if (!myChat.isGroupe) {
+                                                        friend =
+                                                            users.firstWhere(
+                                                                (user) =>
+                                                                    user.id !=
+                                                                    db.uid);
+                                                      }
+                                                      ExtendedNavigator.of(
+                                                              context)
+                                                          .pushNamed(
+                                                              Routes.chatRoom,
+                                                              arguments:
+                                                                  ChatRoomArguments(
+                                                                      chatId:
+                                                                          chatId));
+                                                    }).catchError((onError) {
+                                                      print(onError);
+                                                    });
+                                                  }).catchError((onError) {
+                                                    print(onError);
+                                                  });
+                                                }).catchError((onError) {
+                                                  print(onError);
+                                                });
+                                              }
+                                              //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                                            }),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Transform.translate(
+                                    offset: Offset(0,
+                                        -maxSlide * _animationController.value),
+                                    child: Transform.rotate(
+                                      angle: _animationController.value *
+                                          2.0 *
+                                          math.pi,
+                                      child: Transform.scale(
+                                        scale: _animationController.value,
+                                        child: FloatingActionButton(
+                                            heroTag: 2,
+                                            child: Icon(
+                                              FontAwesomeIcons.users,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSecondary,
+                                            ),
+                                            onPressed: () async {
+                                              await showSearch(
+                                                      context: context,
+                                                      delegate: MyEventSearch(
+                                                          MyEventBlocSearchName()))
+                                                  .then((myEvent) async {
+                                                if (myEvent != null) {
+                                                  await db
+                                                      .addAmongGroupe(
+                                                          myEvent.chatId)
+                                                      .then((_) {
+                                                    db
+                                                        .getMyChat(
+                                                            myEvent.chatId)
+                                                        .then((myChat) {
+                                                      db
+                                                          .chatUsersFuture(
+                                                              myChat)
+                                                          .then((users) {
+                                                        User friend;
+                                                        if (!myChat.isGroupe) {
+                                                          friend =
+                                                              users.firstWhere(
+                                                                  (user) =>
+                                                                      user.id !=
+                                                                      db.uid);
+                                                        }
+                                                        ExtendedNavigator.of(
+                                                                context)
+                                                            .pushNamed(
+                                                                Routes.chatRoom,
+                                                                arguments:
+                                                                    ChatRoomArguments(
+                                                                        chatId:
+                                                                            myChat.id));
+                                                      });
+                                                    });
+                                                  });
+                                                }
+                                              });
+                                            }
+                                            //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: FloatingActionButton(
+                                      heroTag: 3,
+                                      child: Icon(
+                                        FontAwesomeIcons.search,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSecondary,
+                                      ),
+                                      onPressed: () {
+                                        //NotificationHandler().showOverlayWindow();
 
-          body: state as Widget,
-          bottomNavigationBar: CurvedNavigationBar(
-            backgroundColor: Theme.of(context).colorScheme.background,
-            index: i,
-            color: Theme.of(context).colorScheme.primary,
-            height: 45,
-            onTap: (index) {
-              switch (index) {
-                case 0:
-                  BlocProvider.of<NavigationBloc>(context)
-                      .add(NavigationEvents.HomeEvents);
-                  break;
-                case 1:
-                  BlocProvider.of<NavigationBloc>(context)
-                      .add(NavigationEvents.Chat);
-                  break;
-                case 2:
-                  BlocProvider.of<NavigationBloc>(context)
-                      .add(NavigationEvents.Billets);
-                  break;
-                case 3:
-                  BlocProvider.of<NavigationBloc>(context)
-                      .add(NavigationEvents.Profil);
-                  break;
-              }
-            },
-            items: <Widget>[
-              Icon(
-                FontAwesomeIcons.home,
-                size: 30,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-              Icon(
-                FontAwesomeIcons.comments,
-                size: 30,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-              Icon(
-                FontAwesomeIcons.ticketAlt,
-                size: 30,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-              Icon(
-                FontAwesomeIcons.user,
-                size: 30,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-            ],
-          ),
+                                        toggleMenu();
+                                      }
+                                      //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                  )
+                : SizedBox(),
+          ],
         ),
       );
     });
@@ -303,8 +359,6 @@ class _BaseScreensState extends State<BaseScreens>
   @override
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
-
-
 }
 
 //class MySingletonFCM {

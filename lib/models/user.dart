@@ -54,8 +54,8 @@ class User {
       nom: map['nom'] as String,
       password: map['password'] as String,
       provider: map['provider'] as String,
-      genres: map['genres'] as List ??['none'],//arraycontainsAny need somethings
-      types: map['types'] as List ?? ['none'],
+      genres: map['genres'] as List ??[],//arraycontainsAny need somethings
+      types: map['types'] as List ?? [],
     );
   }
 //  Map<String, dynamic> toMap() {

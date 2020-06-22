@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 class BoolToggle with ChangeNotifier {
   File imageProfil, flyer, banner;
   List<File> photos;
-  Map<String,bool> genre = {
+  Map<String, bool> genre = {
     'RAP': false,
     'Zouk': false,
     'Pop': false,
@@ -14,10 +14,15 @@ class BoolToggle with ChangeNotifier {
     'Soca': false,
     'Reggae': false,
     'dancehall': false,
-    'RnB': false
+    'RnB': false,
+    'Jazz': false,
+    'Classique': false,
+    'Électro': false,
+    'Rock': false,
+    'Variété française': false,
   };
 
-  Map<String,bool> type = {
+  Map<String, bool> type = {
     'Concert': false,
     'Dîner': false,
     'Spectacle': false,
@@ -43,7 +48,7 @@ class BoolToggle with ChangeNotifier {
 
   BoolToggle({this.isEnableNotification});
 
-  void setIsAffiche(){
+  void setIsAffiche() {
     isAffiche = !isAffiche;
     notifyListeners();
   }
@@ -57,6 +62,7 @@ class BoolToggle with ChangeNotifier {
     genre[key] = !genre[key];
     notifyListeners();
   }
+
   void modificationType(String key) {
     type[key] = !type[key];
     notifyListeners();
@@ -153,7 +159,6 @@ class BoolToggle with ChangeNotifier {
   }
 
   void initGenre() {
-
     genre = {
       'RAP': false,
       'Zouk': false,
@@ -162,13 +167,16 @@ class BoolToggle with ChangeNotifier {
       'Soca': false,
       'Reggae': false,
       'dancehall': false,
-      'RnB': false
+      'RnB': false,
+      'Jazz': false,
+      'Classique': false,
+      'Électro': false,
+      'Rock': false,
+      'Variété française': false,
     };
-
   }
 
   void initType() {
-
     type = {
       'Concert': false,
       'Dîner': false,
@@ -179,6 +187,5 @@ class BoolToggle with ChangeNotifier {
       'Festival': false,
       'Kids': false,
     };
-
   }
 }

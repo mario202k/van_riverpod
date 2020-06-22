@@ -33,8 +33,6 @@ class UploadEvent extends StatefulWidget {
 
 class _UploadEventState extends State<UploadEvent> {
   List<Asset> images = List<Asset>();
-  String _error = 'No Error Dectected';
-  File _imageFlyer, _imageBanner;
   List<File> imagesEvent = List<File>();
   final TextEditingController _description = TextEditingController();
   final TextEditingController _title = TextEditingController();
@@ -51,8 +49,6 @@ class _UploadEventState extends State<UploadEvent> {
   List<CircularSegmentEntry> circularSegmentEntry;
   GlobalKey<FormBuilderState> _fbKey =
       GlobalKey<FormBuilderState>();
-  final GlobalKey<FormFieldState> _specifyTextFieldKey =
-      GlobalKey<FormFieldState>();
   List<CircularStackEntry> data = List<CircularStackEntry>();
   List<Indicator> _listIndicator = List<Indicator>();
 
@@ -62,59 +58,59 @@ class _UploadEventState extends State<UploadEvent> {
   bool showSpinner = false;
 
   int nbTotal = 0;
-
-  Future _getImageCamera() async {
-    var image = await ImagePicker.pickImage(source: ImageSource.camera);
-
-    if (image != null) {
-      String path = image.path;
-      print(path.substring(path.lastIndexOf('/') + 1));
-      setState(() {
-        _imageFlyer = image;
-      });
-    } else {
-      retrieveLostData();
-    }
-  }
-
-  Future _getImageGallery() async {
-    var image = await ImagePicker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      String path = image.path;
-      print(path.substring(path.lastIndexOf('/') + 1));
-      setState(() {
-        _imageFlyer = image;
-      });
-    } else {
-      ImagePicker.retrieveLostData().then((image) {
-        if (image.file != null) {
-          String path = image.file.path;
-          print(path.substring(path.lastIndexOf('/') + 1));
-          setState(() {
-            _imageFlyer = image.file;
-          });
-        }
-        print(image.file);
-        print('//');
-      });
-      retrieveLostData();
-    }
-  }
-
-  Future<void> retrieveLostData() async {
-    final LostDataResponse response = await ImagePicker.retrieveLostData();
-    if (response == null) {
-      return;
-    }
-    if (response.file != null) {
-      setState(() {
-        _imageFlyer = response.file;
-      });
-    } else {
-      print(response.exception);
-    }
-  }
+//
+//  Future _getImageCamera() async {
+//    var image = await ImagePicker.pickImage(source: ImageSource.camera);
+//
+//    if (image != null) {
+//      String path = image.path;
+//      print(path.substring(path.lastIndexOf('/') + 1));
+//      setState(() {
+//        _imageFlyer = image;
+//      });
+//    } else {
+//      retrieveLostData();
+//    }
+//  }
+//
+//  Future _getImageGallery() async {
+//    var image = await ImagePicker.pickImage(source: ImageSource.gallery);
+//
+//    if (image != null) {
+//      String path = image.path;
+//      print(path.substring(path.lastIndexOf('/') + 1));
+//      setState(() {
+//        _imageFlyer = image;
+//      });
+//    } else {
+//      ImagePicker.retrieveLostData().then((image) {
+//        if (image.file != null) {
+//          String path = image.file.path;
+//          print(path.substring(path.lastIndexOf('/') + 1));
+//          setState(() {
+//            _imageFlyer = image.file;
+//          });
+//        }
+//        print(image.file);
+//        print('//');
+//      });
+//      retrieveLostData();
+//    }
+//  }
+//
+//  Future<void> retrieveLostData() async {
+//    final LostDataResponse response = await ImagePicker.retrieveLostData();
+//    if (response == null) {
+//      return;
+//    }
+//    if (response.file != null) {
+//      setState(() {
+//        _imageFlyer = response.file;
+//      });
+//    } else {
+//      print(response.exception);
+//    }
+//  }
 
   @override
   void initState() {
@@ -224,590 +220,588 @@ class _UploadEventState extends State<UploadEvent> {
     final image = Provider.of<BoolToggle>(context);
 
     return ModelScreen(
-      child: Stack(
-        children: <Widget>[
+      child: Scaffold(
+        appBar: AppBar(title: Text('Monitoring'),),
 
-          ModelBody(
-            child: Column(
-              children: <Widget>[
-                Text('Flyer',style: Theme.of(context).textTheme.bodyText2,),
-                InkWell(
-                  onTap: () {
-                    showDialogSource(context, 'Flyer');
-                  },
-                  child: Container(
-                    child: image.flyer != null
-                        ? Image.file(
-                      image.flyer,
-                    )
-                        : Icon(
-                      FontAwesomeIcons.cloudUploadAlt,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 220,
-                    ),
+        body: ModelBody(
+          child: Column(
+            children: <Widget>[
+              Text('Flyer',style: Theme.of(context).textTheme.bodyText2,),
+              InkWell(
+                onTap: () {
+                  showDialogSource(context, 'Flyer');
+                },
+                child: Container(
+                  child: image.flyer != null
+                      ? Image.file(
+                    image.flyer,
+                  )
+                      : Icon(
+                    FontAwesomeIcons.cloudUploadAlt,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 220,
                   ),
                 ),
-                Text('Banner',style: Theme.of(context).textTheme.bodyText2,),
-                InkWell(
-                  onTap: () {
-                    showDialogSource(context, 'Banner');
-                  },
-                  child: Container(
-                    child: image.banner != null
-                        ? Image.file(
-                      image.banner,
-                    )
-                        : Icon(
-                      FontAwesomeIcons.cloudUploadAlt,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 150,
-                    ),
+              ),
+              Text('Banner',style: Theme.of(context).textTheme.bodyText2,),
+              InkWell(
+                onTap: () {
+                  showDialogSource(context, 'Banner');
+                },
+                child: Container(
+                  child: image.banner != null
+                      ? Image.file(
+                    image.banner,
+                  )
+                      : Icon(
+                    FontAwesomeIcons.cloudUploadAlt,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 150,
                   ),
                 ),
-                Text('Photos',style: Theme.of(context).textTheme.bodyText2,),
-                InkWell(
-                  onTap: loadAssets,
-                  child: images.length > 0
-                      ? GridView.builder(
-                      itemCount: images.length,
-                      shrinkWrap: true,
-                      physics: ClampingScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:
-                          (orientation == Orientation.landscape) ? 3 : 2),
-                      itemBuilder: (BuildContext context, int index) {
-                        Asset asset = images[index];
+              ),
+              Text('Photos',style: Theme.of(context).textTheme.bodyText2,),
+              InkWell(
+                onTap: loadAssets,
+                child: images.length > 0
+                    ? GridView.builder(
+                    itemCount: images.length,
+                    shrinkWrap: true,
+                    physics: ClampingScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount:
+                        (orientation == Orientation.landscape) ? 3 : 2),
+                    itemBuilder: (BuildContext context, int index) {
+                      Asset asset = images[index];
 
-                        return AssetThumb(
-                          asset: asset,
-                          width: 300,
-                          height: 300,
-                        );
-                      })
-                      : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      return AssetThumb(
+                        asset: asset,
+                        width: 300,
+                        height: 300,
+                      );
+                    })
+                    : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    Icon(
+                      FontAwesomeIcons.cloudUploadAlt,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 100,
+                    ),
+                    Icon(
+                      FontAwesomeIcons.cloudUploadAlt,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 100,
+                    ),
+                    Icon(
+                      FontAwesomeIcons.cloudUploadAlt,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 100,
+                    )
+                  ],
+                ),
+              ),
+              Text('Genre',style: Theme.of(context).textTheme.bodyText2,),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: image.genre.keys
+                    .map((e) => SizedBox(
+                  height: 55,
+                  child: Consumer<BoolToggle>(
+                    builder: (BuildContext context, BoolToggle value,
+                        Widget child) {
+                      return CheckboxListTile(
+                        onChanged: (bool val) =>
+                            value.modificationGenre(e),
+                        value: value.genre[e],
+                        activeColor:
+                        Theme.of(context).colorScheme.primary,
+                        title: Text(e),
+                      );
+                    },
+                  ),
+                ))
+                    .toList(),
+              ),
+              Text('Type',style: Theme.of(context).textTheme.bodyText2,),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: image.type.keys
+                    .map((e) => SizedBox(
+                  height: 55,
+                  child: Consumer<BoolToggle>(
+                    builder: (BuildContext context, BoolToggle value,
+                        Widget child) {
+                      return CheckboxListTile(
+                        onChanged: (bool val) =>
+                            value.modificationType(e),
+                        value: value.type[e],
+                        activeColor:
+                        Theme.of(context).colorScheme.primary,
+                        title: Text(e),
+                      );
+                    },
+                  ),
+                ))
+                    .toList(),
+              ),
+              Text('A l\'affiche',style: Theme.of(context).textTheme.bodyText2,),
+              Consumer<BoolToggle>(
+                builder: (BuildContext context, BoolToggle value, Widget child) {
+
+                  return CheckboxListTile(
+                    onChanged: (bool val) =>
+                        value.setIsAffiche(),
+                    value: value.isAffiche,
+                    activeColor:
+                    Theme.of(context).colorScheme.primary,
+                    title: Text('A l\'affiche'),
+                  );
+
+                },
+
+              ),
+              IntrinsicHeight(
+                child: FormBuilder(
+                  // context,
+                  key: _fbKey,
+                  autovalidate: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Icon(
-                        FontAwesomeIcons.cloudUploadAlt,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 100,
+                      Divider(),
+                      FormBuilderTextField(
+                        controller: _title,
+                        attribute: 'Titre',
+                        maxLines: 1,
+
+                        focusNode: _nodes[0],
+                        onEditingComplete: () {
+                          if (_fbKey.currentState.fields['Titre'].currentState
+                              .validate()) {
+                            _nodes[0].unfocus();
+
+                            FocusScope.of(context).requestFocus(_nodes[1]);
+                          }
+                        },
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground),
+                        cursorColor: Theme.of(context).colorScheme.onBackground,
+                        decoration: InputDecoration(labelText: 'Titre'),
+                        validators: [
+                          FormBuilderValidators.required(
+                              errorText: 'Champs requis'),
+                        ],
                       ),
-                      Icon(
-                        FontAwesomeIcons.cloudUploadAlt,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 100,
+                      Divider(),
+                      Text('Durée',style: Theme.of(context).textTheme.bodyText2,),
+                      FormBuilderDateTimePicker(
+                        firstDate: DateTime.now(),
+                        attribute: "Date de debut",
+                        focusNode: _nodes[1],
+                        onChanged: (dt) {
+                          SystemChannels.textInput
+                              .invokeMethod('TextInput.hide');
+                          context.read<BoolToggle>().modificationDateDebut(dt);
+
+                          setState(() {
+                            _dateDebut = dt;
+
+                          });
+                        },
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground),
+                        cursorColor: Theme.of(context).colorScheme.onBackground,
+                        inputType: InputType.both,
+                        format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
+                        decoration: InputDecoration(labelText: 'Date de debut'),
+                        validators: [
+                          FormBuilderValidators.required(
+                              errorText: "champs requis")
+                        ],
                       ),
-                      Icon(
-                        FontAwesomeIcons.cloudUploadAlt,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 100,
-                      )
+                      SizedBox(
+                        height: 4,
+                      ),
+                      FormBuilderDateTimePicker(
+                        firstDate: DateTime.now(),
+                        initialDate: _dateDebut ?? DateTime.now(),
+                        attribute: "Date de fin",
+                        onChanged: (dt) {
+                          SystemChannels.textInput
+                              .invokeMethod('TextInput.hide');
+                          setState(() => _dateFin = dt);
+                        },
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground),
+                        cursorColor: Theme.of(context).colorScheme.onBackground,
+                        focusNode: _nodes[2],
+                        onEditingComplete: () {
+                          if (_fbKey
+                              .currentState.fields['Date de fin'].currentState
+                              .validate()) {
+                            _nodes[2].unfocus();
+                            //FocusScope.of(context).requestFocus(_nodes[3]);
+                          }
+                        },
+                        inputType: InputType.both,
+                        format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
+                        decoration: InputDecoration(labelText: 'Date de fin'),
+                        validators: [
+                          FormBuilderValidators.required(
+                              errorText: "champs requis")
+                        ],
+                      ),
+                      Divider(),
+                      Text('Adresse',style: Theme.of(context).textTheme.bodyText2,),
+                      FormBuilderTextField(
+                        controller: _rue,
+                        attribute: 'Rue',
+                        maxLines: 1,
+
+                        focusNode: _nodes[3],
+                        onEditingComplete: () {
+                          if (_fbKey.currentState.fields['Rue'].currentState
+                              .validate()) {
+                            _nodes[3].unfocus();
+
+                            FocusScope.of(context).requestFocus(_nodes[4]);
+                          }
+                        },
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground),
+                        cursorColor: Theme.of(context).colorScheme.onBackground,
+                        decoration: InputDecoration(labelText: 'Rue'),
+                        validators: [
+                          FormBuilderValidators.required(
+                              errorText: 'Champs requis'),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 4,
+                      ),
+                      FormBuilderTextField(
+                        controller: _codePostal,
+                        attribute: 'Code Postal',
+                        maxLines: 1,
+
+                        focusNode: _nodes[4],
+                        onEditingComplete: () {
+                          if (_fbKey
+                              .currentState.fields['Code Postal'].currentState
+                              .validate()) {
+                            _nodes[4].unfocus();
+
+                            FocusScope.of(context).requestFocus(_nodes[5]);
+                          }
+                        },
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground),
+                        cursorColor: Theme.of(context).colorScheme.onBackground,
+                        decoration: InputDecoration(labelText: 'Code Postal'),
+                        validators: [
+                          FormBuilderValidators.required(
+                              errorText: 'Champs requis'),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 4,
+                      ),
+                      FormBuilderTextField(
+                        controller: _ville,
+                        attribute: 'Ville',
+                        maxLines: 1,
+
+                        focusNode: _nodes[5],
+                        onEditingComplete: () {
+                          if (_fbKey.currentState.fields['Ville'].currentState
+                              .validate()) {
+                            _nodes[5].unfocus();
+
+                            FocusScope.of(context).requestFocus(_nodes[6]);
+                          }
+                        },
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground),
+                        cursorColor: Theme.of(context).colorScheme.onBackground,
+                        decoration: InputDecoration(labelText: 'Ville'),
+                        validators: [
+                          FormBuilderValidators.required(
+                              errorText: 'Champs requis'),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 4,
+                      ),
+                      FormBuilderTextField(
+                        controller: _coords,
+                        attribute: 'Coordonnée',
+                        maxLines: 1,
+
+                        focusNode: _nodes[6],
+
+
+                        onEditingComplete: () {
+                          if (_fbKey
+                              .currentState.fields['Coordonnée'].currentState
+                              .validate()) {
+                            _nodes[6].unfocus();
+
+                            FocusScope.of(context).requestFocus(_nodes[7]);
+                          }
+                        },
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground),
+                        cursorColor: Theme.of(context).colorScheme.onBackground,
+                        decoration: InputDecoration(labelText: 'Coordonnée'),
+                        validators: [
+                          FormBuilderValidators.required(
+                              errorText: 'Champs requis'),
+                              (val) {
+                            RegExp regex = RegExp(
+                                r'^([-+]?)([\d]{1,2})(((\.)(\d+)(,)))(\s*)(([-+]?)([\d]{1,3})((\.)(\d+))?)$');
+
+                            if (regex.allMatches(val).length == 0) {
+                              return 'Coordonnée non valide';
+                            }
+                            return null;
+                          },
+                        ],
+                      ),
+                      Divider(),
+
+                      FormBuilderTextField(
+                        controller: _description,
+                        attribute: 'description',
+
+
+
+                        maxLines: 10,
+                        focusNode: _nodes[7],
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground),
+                        cursorColor: Theme.of(context).colorScheme.onBackground,
+                        decoration: InputDecoration(labelText: 'Description'),
+                        validators: [
+                          FormBuilderValidators.required(
+                              errorText: 'Champs requis')
+                        ],
+                      ),
                     ],
                   ),
                 ),
-                Text('Genre',style: Theme.of(context).textTheme.bodyText2,),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: image.genre.keys
-                      .map((e) => SizedBox(
-                    height: 55,
-                    child: Consumer<BoolToggle>(
-                      builder: (BuildContext context, BoolToggle value,
-                          Widget child) {
-                        return CheckboxListTile(
-                          onChanged: (bool val) =>
-                              value.modificationGenre(e),
-                          value: value.genre[e],
-                          activeColor:
-                          Theme.of(context).colorScheme.primary,
-                          title: Text(e),
-                        );
-                      },
+              ),
+              Divider(),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: formulesWidgets,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  RawMaterialButton(
+                    onPressed: () {
+                      if (formulesWidgets.length > 2) {
+                        deleteFormule();
+                      }
+                    },
+                    child: Icon(
+                      FontAwesomeIcons.minus,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 30.0,
                     ),
-                  ))
-                      .toList(),
-                ),
-                Text('Type',style: Theme.of(context).textTheme.bodyText2,),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: image.type.keys
-                      .map((e) => SizedBox(
-                    height: 55,
-                    child: Consumer<BoolToggle>(
-                      builder: (BuildContext context, BoolToggle value,
-                          Widget child) {
-                        return CheckboxListTile(
-                          onChanged: (bool val) =>
-                              value.modificationType(e),
-                          value: value.type[e],
-                          activeColor:
-                          Theme.of(context).colorScheme.primary,
-                          title: Text(e),
-                        );
-                      },
+                    shape: CircleBorder(),
+                    elevation: 5.0,
+                    fillColor: Color(0xffFAF4F2),
+                    padding: const EdgeInsets.all(10.0),
+                  ),
+                  RawMaterialButton(
+                    onPressed: () {
+                      addFormule();
+                    },
+                    child: Icon(
+                      FontAwesomeIcons.plus,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 30.0,
                     ),
-                  ))
-                      .toList(),
-                ),
-                Text('A l\'affiche',style: Theme.of(context).textTheme.bodyText2,),
-                Consumer<BoolToggle>(
-                  builder: (BuildContext context, BoolToggle value, Widget child) {
-
-                    return CheckboxListTile(
-                      onChanged: (bool val) =>
-                          value.setIsAffiche(),
-                      value: value.isAffiche,
-                      activeColor:
-                      Theme.of(context).colorScheme.primary,
-                      title: Text('A l\'affiche'),
-                    );
-
-                  },
-
-                ),
-                IntrinsicHeight(
-                  child: FormBuilder(
-                    // context,
-                    key: _fbKey,
-                    autovalidate: false,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Divider(),
-                        FormBuilderTextField(
-                          controller: _title,
-                          attribute: 'Titre',
-                          maxLines: 1,
-
-                          focusNode: _nodes[0],
-                          onEditingComplete: () {
-                            if (_fbKey.currentState.fields['Titre'].currentState
-                                .validate()) {
-                              _nodes[0].unfocus();
-
-                              FocusScope.of(context).requestFocus(_nodes[1]);
-                            }
-                          },
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onBackground),
-                          cursorColor: Theme.of(context).colorScheme.onBackground,
-                          decoration: InputDecoration(labelText: 'Titre'),
-                          validators: [
-                            FormBuilderValidators.required(
-                                errorText: 'Champs requis'),
-                          ],
-                        ),
-                        Divider(),
-                        Text('Durée',style: Theme.of(context).textTheme.bodyText2,),
-                        FormBuilderDateTimePicker(
-                          firstDate: DateTime.now(),
-                          attribute: "Date de debut",
-                          focusNode: _nodes[1],
-                          onChanged: (dt) {
-                            SystemChannels.textInput
-                                .invokeMethod('TextInput.hide');
-                            context.read<BoolToggle>().modificationDateDebut(dt);
-
-                            setState(() {
-                              _dateDebut = dt;
-
-                            });
-                          },
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onBackground),
-                          cursorColor: Theme.of(context).colorScheme.onBackground,
-                          inputType: InputType.both,
-                          format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
-                          decoration: InputDecoration(labelText: 'Date de debut'),
-                          validators: [
-                            FormBuilderValidators.required(
-                                errorText: "champs requis")
-                          ],
-                        ),
-                        SizedBox(
-                          height: 4,
-                        ),
-                        FormBuilderDateTimePicker(
-                          firstDate: DateTime.now(),
-                          initialDate: _dateDebut ?? DateTime.now(),
-                          attribute: "Date de fin",
-                          onChanged: (dt) {
-                            SystemChannels.textInput
-                                .invokeMethod('TextInput.hide');
-                            setState(() => _dateFin = dt);
-                          },
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onBackground),
-                          cursorColor: Theme.of(context).colorScheme.onBackground,
-                          focusNode: _nodes[2],
-                          onEditingComplete: () {
-                            if (_fbKey
-                                .currentState.fields['Date de fin'].currentState
-                                .validate()) {
-                              _nodes[2].unfocus();
-                              //FocusScope.of(context).requestFocus(_nodes[3]);
-                            }
-                          },
-                          inputType: InputType.both,
-                          format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
-                          decoration: InputDecoration(labelText: 'Date de fin'),
-                          validators: [
-                            FormBuilderValidators.required(
-                                errorText: "champs requis")
-                          ],
-                        ),
-                        Divider(),
-                        Text('Adresse',style: Theme.of(context).textTheme.bodyText2,),
-                        FormBuilderTextField(
-                          controller: _rue,
-                          attribute: 'Rue',
-                          maxLines: 1,
-
-                          focusNode: _nodes[3],
-                          onEditingComplete: () {
-                            if (_fbKey.currentState.fields['Rue'].currentState
-                                .validate()) {
-                              _nodes[3].unfocus();
-
-                              FocusScope.of(context).requestFocus(_nodes[4]);
-                            }
-                          },
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onBackground),
-                          cursorColor: Theme.of(context).colorScheme.onBackground,
-                          decoration: InputDecoration(labelText: 'Rue'),
-                          validators: [
-                            FormBuilderValidators.required(
-                                errorText: 'Champs requis'),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 4,
-                        ),
-                        FormBuilderTextField(
-                          controller: _codePostal,
-                          attribute: 'Code Postal',
-                          maxLines: 1,
-
-                          focusNode: _nodes[4],
-                          onEditingComplete: () {
-                            if (_fbKey
-                                .currentState.fields['Code Postal'].currentState
-                                .validate()) {
-                              _nodes[4].unfocus();
-
-                              FocusScope.of(context).requestFocus(_nodes[5]);
-                            }
-                          },
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onBackground),
-                          cursorColor: Theme.of(context).colorScheme.onBackground,
-                          decoration: InputDecoration(labelText: 'Code Postal'),
-                          validators: [
-                            FormBuilderValidators.required(
-                                errorText: 'Champs requis'),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 4,
-                        ),
-                        FormBuilderTextField(
-                          controller: _ville,
-                          attribute: 'Ville',
-                          maxLines: 1,
-
-                          focusNode: _nodes[5],
-                          onEditingComplete: () {
-                            if (_fbKey.currentState.fields['Ville'].currentState
-                                .validate()) {
-                              _nodes[5].unfocus();
-
-                              FocusScope.of(context).requestFocus(_nodes[6]);
-                            }
-                          },
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onBackground),
-                          cursorColor: Theme.of(context).colorScheme.onBackground,
-                          decoration: InputDecoration(labelText: 'Ville'),
-                          validators: [
-                            FormBuilderValidators.required(
-                                errorText: 'Champs requis'),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 4,
-                        ),
-                        FormBuilderTextField(
-                          controller: _coords,
-                          attribute: 'Coordonnée',
-                          maxLines: 1,
-
-                          focusNode: _nodes[6],
-
-
-                          onEditingComplete: () {
-                            if (_fbKey
-                                .currentState.fields['Coordonnée'].currentState
-                                .validate()) {
-                              _nodes[6].unfocus();
-
-                              FocusScope.of(context).requestFocus(_nodes[7]);
-                            }
-                          },
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onBackground),
-                          cursorColor: Theme.of(context).colorScheme.onBackground,
-                          decoration: InputDecoration(labelText: 'Coordonnée'),
-                          validators: [
-                            FormBuilderValidators.required(
-                                errorText: 'Champs requis'),
-                                (val) {
-                              RegExp regex = RegExp(
-                                  r'^([-+]?)([\d]{1,2})(((\.)(\d+)(,)))(\s*)(([-+]?)([\d]{1,3})((\.)(\d+))?)$');
-
-                              if (regex.allMatches(val).length == 0) {
-                                return 'Coordonnée non valide';
-                              }
-                              return null;
-                            },
-                          ],
-                        ),
-                        Divider(),
-
-                        FormBuilderTextField(
-                          controller: _description,
-                          attribute: 'description',
-
-
-
-                          maxLines: 10,
-                          focusNode: _nodes[7],
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onBackground),
-                          cursorColor: Theme.of(context).colorScheme.onBackground,
-                          decoration: InputDecoration(labelText: 'Description'),
-                          validators: [
-                            FormBuilderValidators.required(
-                                errorText: 'Champs requis')
-                          ],
-                        ),
-                      ],
-                    ),
+                    shape: CircleBorder(),
+                    elevation: 5.0,
+                    fillColor: Color(0xffFAF4F2),
+                    padding: const EdgeInsets.all(10.0),
+                  ),
+                ],
+              ),
+              Divider(),
+              SizedBox(
+                height: 300,
+                child: AnimatedCircularChart(
+                  key: _chartKey,
+                  size: const Size(300.0, 300.0),
+                  initialChartData: data,
+                  chartType: CircularChartType.Radial,
+                  //percentageValues: true,
+                  holeLabel: nbTotal.toString(),
+                  labelStyle: new TextStyle(
+                    color: Colors.blueGrey[600],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24.0,
                   ),
                 ),
-                Divider(),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: formulesWidgets,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    RawMaterialButton(
-                      onPressed: () {
-                        if (formulesWidgets.length > 2) {
-                          deleteFormule();
-                        }
+              ),
+              Wrap(
+                alignment: WrapAlignment.spaceAround,
+                spacing: 40,
+                direction: Axis.horizontal,
+                runSpacing: 5,
+                children: _listIndicator,
+              ),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: Duration(milliseconds: 500),
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return ScaleTransition(
+                          scale: animation,
+                          child: child,
+                        );
                       },
-                      child: Icon(
-                        FontAwesomeIcons.minus,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 30.0,
-                      ),
-                      shape: CircleBorder(),
-                      elevation: 5.0,
-                      fillColor: Color(0xffFAF4F2),
-                      padding: const EdgeInsets.all(10.0),
-                    ),
-                    RawMaterialButton(
-                      onPressed: () {
-                        addFormule();
-                      },
-                      child: Icon(
-                        FontAwesomeIcons.plus,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 30.0,
-                      ),
-                      shape: CircleBorder(),
-                      elevation: 5.0,
-                      fillColor: Color(0xffFAF4F2),
-                      padding: const EdgeInsets.all(10.0),
-                    ),
-                  ],
-                ),
-                Divider(),
-                SizedBox(
-                  height: 300,
-                  child: AnimatedCircularChart(
-                    key: _chartKey,
-                    size: const Size(300.0, 300.0),
-                    initialChartData: data,
-                    chartType: CircularChartType.Radial,
-                    //percentageValues: true,
-                    holeLabel: nbTotal.toString(),
-                    labelStyle: new TextStyle(
-                      color: Colors.blueGrey[600],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24.0,
-                    ),
-                  ),
-                ),
-                Wrap(
-                  alignment: WrapAlignment.spaceAround,
-                  spacing: 40,
-                  direction: Axis.horizontal,
-                  runSpacing: 5,
-                  children: _listIndicator,
-                ),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: 500),
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                          return ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          );
-                        },
-                        child: !showSpinner
-                            ? RaisedButton(
-                          child: Text(
-                            "Soumettre",
-                          ),
-                          onPressed: () {
-                            _fbKey.currentState.save();
-                            if (_fbKey.currentState.validate()) {
-                              String adresse = _fbKey
-                                  .currentState
-                                  .fields['Rue']
-                                  .currentState
-                                  .value +' '+
-                                  _fbKey.currentState.fields['Code Postal']
-                                      .currentState.value +' '+
-                                  _fbKey.currentState.fields['Ville']
-                                      .currentState.value;
-                              String coordsString = _fbKey
-                                  .currentState
-                                  .fields['Coordonnée']
-                                  .currentState
-                                  .value;
-                              String latitude = coordsString
-                                  .substring(0, coordsString.indexOf(','))
-                                  .trim();
-                              String longitude = coordsString
-                                  .substring(
-                                  coordsString.indexOf(',') + 1)
-                                  .trim();
-
-                              Coords coords = Coords(
-                                  double.parse(latitude),
-                                  double.parse(longitude));
-
-                              List<Formule> formules = List<Formule>();
-
-                              formulesWidgets.forEach((f) {
-                                if (f is CardFormula) {
-                                  if (f.fbKey.currentState.validate()) {
-                                    formules.add(Formule(
-                                        title: f
-                                            .fbKey
-                                            .currentState
-                                            .fields['Nom']
-                                            .currentState
-                                            .value,
-                                        prix: double.parse(f
-                                            .fbKey
-                                            .currentState
-                                            .fields['Prix']
-                                            .currentState
-                                            .value
-                                            .toString()),
-                                        nombreDePersonne: int.parse(f
-                                            .fbKey
-                                            .currentState
-                                            .fields[
-                                        'Nombre de personne par formule']
-                                            .currentState
-                                            .value),
-                                        id: f.numero.toString()));
-                                  } else {
-
-                                    showSnackBar(
-                                        'Corriger la formule n°${f.numero}',
-                                        context);
-                                  }
-                                }
-                              });
-
-                              if (formules.length ==
-                                  formulesWidgets.length / 2) {
-                                setState(() {
-                                  showSpinner = true;
-                                });
-
-                                db.uploadEvent(
-                                    context: context,
-                                    type: context.read<BoolToggle>().type,
-                                    genre: context.read<BoolToggle>().genre,
-                                    titre: _title.text,
-                                    formules: formules,
-                                    adresse: adresse,
-                                    coords: coords,
-                                    dateDebut: _dateDebut,
-                                    dateFin: _dateFin,
-                                    description: _description.text,
-                                    flyer: context.read<BoolToggle>().flyer,
-                                    banner: context.read<BoolToggle>().banner,
-                                    images: images,
-                                    isAffiche: context.read<BoolToggle>().isAffiche
-                                )
-                                    .whenComplete(() {
-                                  setState(() {
-                                    showSpinner = false;
-                                  });
-                                });
-                              }
-
-                              //Navigator.pop(context);
-                            } else {
-                              //print(_fbKey.currentState.value);
-                              print("validation failed");
-                              showSnackBar(
-                                  'formulaire non valide', context);
-                            }
-                          },
-                        )
-                            : Center(
-                          child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).colorScheme.secondary)),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 20,
-                    ),
-                    Expanded(
-                      child: RaisedButton(
-                        //color: Theme.of(context).colorScheme,
+                      child: !showSpinner
+                          ? RaisedButton(
                         child: Text(
-                          "Recommencer",
-                          //style: TextStyle(color: Colors.white),
+                          "Soumettre",
                         ),
                         onPressed: () {
-                          _fbKey.currentState.reset();
+                          _fbKey.currentState.save();
+                          if (_fbKey.currentState.validate()) {
+                            String adresse = _fbKey
+                                .currentState
+                                .fields['Rue']
+                                .currentState
+                                .value +' '+
+                                _fbKey.currentState.fields['Code Postal']
+                                    .currentState.value +' '+
+                                _fbKey.currentState.fields['Ville']
+                                    .currentState.value;
+                            String coordsString = _fbKey
+                                .currentState
+                                .fields['Coordonnée']
+                                .currentState
+                                .value;
+                            String latitude = coordsString
+                                .substring(0, coordsString.indexOf(','))
+                                .trim();
+                            String longitude = coordsString
+                                .substring(
+                                coordsString.indexOf(',') + 1)
+                                .trim();
+
+                            Coords coords = Coords(
+                                double.parse(latitude),
+                                double.parse(longitude));
+
+                            List<Formule> formules = List<Formule>();
+
+                            formulesWidgets.forEach((f) {
+                              if (f is CardFormula) {
+                                if (f.fbKey.currentState.validate()) {
+                                  formules.add(Formule(
+                                      title: f
+                                          .fbKey
+                                          .currentState
+                                          .fields['Nom']
+                                          .currentState
+                                          .value,
+                                      prix: double.parse(f
+                                          .fbKey
+                                          .currentState
+                                          .fields['Prix']
+                                          .currentState
+                                          .value
+                                          .toString()),
+                                      nombreDePersonne: int.parse(f
+                                          .fbKey
+                                          .currentState
+                                          .fields[
+                                      'Nombre de personne par formule']
+                                          .currentState
+                                          .value),
+                                      id: f.numero.toString()));
+                                } else {
+
+                                  showSnackBar(
+                                      'Corriger la formule n°${f.numero}',
+                                      context);
+                                }
+                              }
+                            });
+
+                            if (formules.length ==
+                                formulesWidgets.length / 2) {
+                              setState(() {
+                                showSpinner = true;
+                              });
+
+                              db.uploadEvent(
+                                  context: context,
+                                  type: context.read<BoolToggle>().type,
+                                  genre: context.read<BoolToggle>().genre,
+                                  titre: _title.text,
+                                  formules: formules,
+                                  adresse: adresse,
+                                  coords: coords,
+                                  dateDebut: _dateDebut,
+                                  dateFin: _dateFin,
+                                  description: _description.text,
+                                  flyer: context.read<BoolToggle>().flyer,
+                                  banner: context.read<BoolToggle>().banner,
+                                  images: images,
+                                  isAffiche: context.read<BoolToggle>().isAffiche
+                              )
+                                  .whenComplete(() {
+                                setState(() {
+                                  showSpinner = false;
+                                });
+                              });
+                            }
+
+                            //Navigator.pop(context);
+                          } else {
+                            //print(_fbKey.currentState.value);
+                            print("validation failed");
+                            showSnackBar(
+                                'formulaire non valide', context);
+                          }
                         },
+                      )
+                          : Center(
+                        child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).colorScheme.secondary)),
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  Expanded(
+                    child: RaisedButton(
+                      //color: Theme.of(context).colorScheme,
+                      child: Text(
+                        "Recommencer",
+                        //style: TextStyle(color: Colors.white),
+                      ),
+                      onPressed: () {
+                        _fbKey.currentState.reset();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TopAppBar('', false, double.infinity),
-        ],
+        ),
       ),
     );
   }
@@ -815,7 +809,7 @@ class _UploadEventState extends State<UploadEvent> {
   Future<void> loadAssets() async {
     print("loadAssets");
     List<Asset> resultList = List<Asset>();
-    String error = 'No Error Dectected';
+
 
     try {
       resultList = await MultiImagePicker.pickImages(
@@ -832,7 +826,8 @@ class _UploadEventState extends State<UploadEvent> {
         ),
       );
     } on Exception catch (e) {
-      error = e.toString();
+      print(e);
+
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -842,7 +837,7 @@ class _UploadEventState extends State<UploadEvent> {
 
     setState(() {
       images = resultList;
-      _error = error;
+
     });
   }
 

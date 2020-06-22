@@ -5,8 +5,8 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:vanevents/models/ticket.dart';
+import 'package:vanevents/screens/model_screen.dart';
 import 'package:vanevents/services/firestore_database.dart';
-import 'package:vanevents/shared/topAppBar.dart';
 
 class MonitoringScanner extends StatefulWidget {
   final String eventId;
@@ -46,208 +46,202 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
         Provider.of<FirestoreDatabase>(context, listen: false);
     ticketsStream = db.streamTicketsAdmin(widget.eventId);
 
-    return Container(
-      color: Theme.of(context).colorScheme.secondary,
-      child: SafeArea(
-        child: Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.background,
-          key: _scaffoldKey,
-          appBar: PreferredSize(
-            preferredSize: Size(double.infinity, 100),
-            child: TopAppBar('Monitoring', false, double.infinity),
-          ),
-          body: LayoutBuilder(builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                    minWidth: constraints.maxWidth,
-                    minHeight: constraints.maxHeight),
-                child: StreamBuilder<List<Ticket>>(
-                    stream: ticketsStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        print(snapshot.error);
-                        return Center(
-                          child: Text('Erreur de connexion'),
-                        );
-                      } else if (snapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return Center(
-                          child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).colorScheme.secondary)),
-                        );
+    return ModelScreen(
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        key: _scaffoldKey,
+        appBar: AppBar(title: Text('Monitoring'),),
+        body: LayoutBuilder(builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                  minWidth: constraints.maxWidth,
+                  minHeight: constraints.maxHeight),
+              child: StreamBuilder<List<Ticket>>(
+                  stream: ticketsStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      print(snapshot.error);
+                      return Center(
+                        child: Text('Erreur de connexion'),
+                      );
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).colorScheme.secondary)),
+                      );
+                    }
+
+                    tickets = snapshot.data;
+                    int expected = 0, present = 0;
+
+                    Ticket ongoingTicket;
+                    for (int i = 0; i < tickets.length; i++) {
+                      if (tickets[i].id == qrResult) {
+                        ongoingTicket = tickets[i];
                       }
 
-                      tickets = snapshot.data;
-                      int expected = 0, present = 0;
+                      if(tickets[i].status != 'Annulé'){
+                        for (int j = 0; j < tickets[i].participants.length; j++) {
+                          expected++;
 
-                      Ticket ongoingTicket;
-                      for (int i = 0; i < tickets.length; i++) {
-                        if (tickets[i].id == qrResult) {
-                          ongoingTicket = tickets[i];
-                        }
-
-                        if(tickets[i].status != 'Annulé'){
-                          for (int j = 0; j < tickets[i].participants.length; j++) {
-                            expected++;
-
-                            if (tickets[i].participants.values.toList()[j][1]) {
-                              present++;
-                            }
+                          if (tickets[i].participants.values.toList()[j][1]) {
+                            present++;
                           }
                         }
                       }
+                    }
 
-                      double totalAttendu =
-                          expected.toDouble() - present.toDouble();
+                    double totalAttendu =
+                        expected.toDouble() - present.toDouble();
 
-                      List<CircularStackEntry> data = <CircularStackEntry>[
-                        new CircularStackEntry(
-                          <CircularSegmentEntry>[
-                            new CircularSegmentEntry(totalAttendu, Colors.red,
-                                rankKey: 'Attendu'),
-                            new CircularSegmentEntry(
-                                present.toDouble(), Colors.green,
-                                rankKey: 'Present'),
-                          ],
-                          rankKey: 'Quarterly Profits',
-                        ),
-                      ];
+                    List<CircularStackEntry> data = <CircularStackEntry>[
+                      new CircularStackEntry(
+                        <CircularSegmentEntry>[
+                          new CircularSegmentEntry(totalAttendu, Colors.red,
+                              rankKey: 'Attendu'),
+                          new CircularSegmentEntry(
+                              present.toDouble(), Colors.green,
+                              rankKey: 'Present'),
+                        ],
+                        rankKey: 'Quarterly Profits',
+                      ),
+                    ];
 
-                      if (_chartKey.currentState != null) {
-                        _chartKey.currentState.updateData(data);
-                      }
+                    if (_chartKey.currentState != null) {
+                      _chartKey.currentState.updateData(data);
+                    }
 
-                      int total = totalAttendu.toInt();
+                    int total = totalAttendu.toInt();
 
-                      return tickets.isNotEmpty
-                          ? Column(
-                              children: <Widget>[
-                                Row(
-                                  children: <Widget>[
-                                    Expanded(
+                    return tickets.isNotEmpty
+                        ? Column(
+                            children: <Widget>[
+                              Row(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: Center(
+                                        child: Text(
+                                      'Present : $present',
+                                      style: TextStyle(color: Colors.green),
+                                    )),
+                                  ),
+                                  Expanded(
                                       child: Center(
                                           child: Text(
-                                        'Present : $present',
-                                        style: TextStyle(color: Colors.green),
-                                      )),
-                                    ),
-                                    Expanded(
-                                        child: Center(
-                                            child: Text(
-                                      'Attendu : $total',
-                                      style: TextStyle(color: Colors.red),
-                                    )))
-                                  ],
+                                    'Attendu : $total',
+                                    style: TextStyle(color: Colors.red),
+                                  )))
+                                ],
+                              ),
+                              AnimatedCircularChart(
+                                key: _chartKey,
+                                size: const Size(300.0, 300.0),
+                                initialChartData: data,
+                                chartType: CircularChartType.Radial,
+                                //percentageValues: true,
+                                holeLabel: '${(100 * present) / expected} %',
+                                labelStyle: new TextStyle(
+                                  color: Colors.blueGrey[600],
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 24.0,
                                 ),
-                                AnimatedCircularChart(
-                                  key: _chartKey,
-                                  size: const Size(300.0, 300.0),
-                                  initialChartData: data,
-                                  chartType: CircularChartType.Radial,
-                                  //percentageValues: true,
-                                  holeLabel: '${(100 * present) / expected} %',
-                                  labelStyle: new TextStyle(
-                                    color: Colors.blueGrey[600],
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 24.0,
-                                  ),
-                                ),
-                                ongoingTicket != null
-                                    ? SizedBox(
-                                        height: 200,
-                                        child: ListView.builder(
-                                          scrollDirection: Axis.horizontal,
-                                          itemCount:
-                                              ongoingTicket.participants.length,
-                                          itemBuilder:
-                                              (BuildContext context, int index) {
-                                            String key = ongoingTicket
-                                                .participants.keys
-                                                .toList()[index];
-                                            bool isHere =
-                                                ongoingTicket.participants[key][1];
-                                            return SizedBox(
-                                              width: 250,
-                                              child: GestureDetector(
-                                                onTap: () => db.setToggleisHere(
-                                                    ongoingTicket.participants,
-                                                    qrResult,
-                                                    index),
-                                                child: Card(
-                                                  color: isHere
-                                                      ? Theme.of(context)
-                                                          .colorScheme
-                                                          .secondary
-                                                      : Theme.of(context)
-                                                          .colorScheme
-                                                          .surface,
-                                                  child: Column(
-                                                    children: <Widget>[
-                                                      Text(
-                                                        key,
-                                                        style: TextStyle(
-                                                            fontSize: 20,
-                                                            color: isHere
-                                                                ? Colors.white
-                                                                : Colors.black),
-                                                      ),
-                                                      Text(
-                                                        ongoingTicket
-                                                            .participants[key][0],
-                                                        style: TextStyle(
-                                                            fontSize: 20,
-                                                            color: isHere
-                                                                ? Colors.white
-                                                                : Colors.black),
-                                                      )
-                                                    ],
-                                                  ),
+                              ),
+                              ongoingTicket != null
+                                  ? SizedBox(
+                                      height: 200,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount:
+                                            ongoingTicket.participants.length,
+                                        itemBuilder:
+                                            (BuildContext context, int index) {
+                                          String key = ongoingTicket
+                                              .participants.keys
+                                              .toList()[index];
+                                          bool isHere =
+                                              ongoingTicket.participants[key][1];
+                                          return SizedBox(
+                                            width: 250,
+                                            child: GestureDetector(
+                                              onTap: () => db.setToggleisHere(
+                                                  ongoingTicket.participants,
+                                                  qrResult,
+                                                  index),
+                                              child: Card(
+                                                color: isHere
+                                                    ? Theme.of(context)
+                                                        .colorScheme
+                                                        .secondary
+                                                    : Theme.of(context)
+                                                        .colorScheme
+                                                        .surface,
+                                                child: Column(
+                                                  children: <Widget>[
+                                                    Text(
+                                                      key,
+                                                      style: TextStyle(
+                                                          fontSize: 20,
+                                                          color: isHere
+                                                              ? Colors.white
+                                                              : Colors.black),
+                                                    ),
+                                                    Text(
+                                                      ongoingTicket
+                                                          .participants[key][0],
+                                                      style: TextStyle(
+                                                          fontSize: 20,
+                                                          color: isHere
+                                                              ? Colors.white
+                                                              : Colors.black),
+                                                    )
+                                                  ],
                                                 ),
                                               ),
-                                            );
-                                          },
-                                        ),
-                                      )
-                                    : SizedBox(),
-                                ongoingTicket != null
-                                    ? RaisedButton(
-                                        onPressed: () =>
-                                            db.toutValider(ongoingTicket),
-                                        child: Text(
-                                          'Tout le monde',
-                                          style: Theme.of(context).textTheme.button,
-                                        ),
-                                      )
-                                    : SizedBox(),
-                              ],
-                            )
-                          : Center(
-                              child: Text(
-                                'Aucun ticket vendu',
-                                style: Theme.of(context).textTheme.button,
-                              ),
-                            );
-                    }),
-              ),
-            );
-          }),
-          floatingActionButton: FloatingActionButton.extended(
-            icon: Icon(
-              Icons.camera_alt,
-              color: Theme.of(context).colorScheme.onSecondary,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  : SizedBox(),
+                              ongoingTicket != null
+                                  ? RaisedButton(
+                                      onPressed: () =>
+                                          db.toutValider(ongoingTicket),
+                                      child: Text(
+                                        'Tout le monde',
+                                        style: Theme.of(context).textTheme.button,
+                                      ),
+                                    )
+                                  : SizedBox(),
+                            ],
+                          )
+                        : Center(
+                            child: Text(
+                              'Aucun ticket vendu',
+                              style: Theme.of(context).textTheme.bodyText1,
+                            ),
+                          );
+                  }),
             ),
-            label: Text(
-              "Scan",
-              style: Theme.of(context).textTheme.button,
-            ),
-            onPressed: () {
-              startScan(db, context);
-            },
+          );
+        }),
+        floatingActionButton: FloatingActionButton.extended(
+          icon: Icon(
+            Icons.camera_alt,
+            color: Theme.of(context).colorScheme.onSecondary,
           ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+          label: Text(
+            "Scan",
+            style: Theme.of(context).textTheme.button,
+          ),
+          onPressed: () {
+            startScan(db, context);
+          },
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
   }

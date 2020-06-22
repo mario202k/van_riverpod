@@ -48,6 +48,7 @@ class FullPhotoScreenState extends State<FullPhotoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(child: PhotoView(imageProvider: widget.url==null?FileImage(widget.file): NetworkImage(url)));
+    return Container(child: PhotoView(
+        imageProvider: widget.url==null?FileImage(widget.file): NetworkImage(url)));
   }
 }

@@ -10,7 +10,6 @@ import 'package:vanevents/models/event.dart';
 import 'package:vanevents/routing/route.gr.dart';
 import 'package:vanevents/screens/model_screen.dart';
 import 'package:vanevents/services/firestore_database.dart';
-import 'package:vanevents/shared/topAppBar.dart';
 
 class AdminEvents extends StatefulWidget {
   @override
@@ -31,10 +30,7 @@ class _AdminEventsState extends State<AdminEvents> {
     return ModelScreen(
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
-        appBar: PreferredSize(
-          preferredSize: Size(double.infinity, 100),
-          child: TopAppBar('Admin', false, double.infinity),
-        ),
+        appBar: AppBar(title: Text('Admin'),),
         body: StreamBuilder<List<MyEvent>>(
             stream: streamEvents,
             builder: (context, snapshot) {
@@ -79,7 +75,9 @@ class _AdminEventsState extends State<AdminEvents> {
                                             actions: <Widget>[
                                               FlatButton(
                                                 child: Text('Non'),
-                                                onPressed: () {},
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
                                               ),
                                               FlatButton(
                                                 child: Text('Oui'),
@@ -96,11 +94,15 @@ class _AdminEventsState extends State<AdminEvents> {
                                             actions: <Widget>[
                                               FlatButton(
                                                 child: Text('Non'),
-                                                onPressed: () {},
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
                                               ),
                                               FlatButton(
                                                 child: Text('Oui'),
-                                                onPressed: () {},
+                                                onPressed: () {
+                                                  db.cancelEvent(events.elementAt(index).id);
+                                                },
                                               ),
                                             ],
                                           ));
@@ -121,11 +123,15 @@ class _AdminEventsState extends State<AdminEvents> {
                           child: ListTile(
                             leading: Text(
                               events.elementAt(index).titre,
-                              style: Theme.of(context).textTheme.button,
+                              style: Theme.of(context).textTheme.button.copyWith(
+                                color: Theme.of(context).colorScheme.onBackground
+                              ),
                             ),
                             title: Text(
                               events.elementAt(index).status,
-                              style: Theme.of(context).textTheme.button,
+                              style: Theme.of(context).textTheme.button.copyWith(
+                                  color: Theme.of(context).colorScheme.onBackground
+                              ),
                             ),
                             trailing: Icon(
                               FontAwesomeIcons.qrcode,
