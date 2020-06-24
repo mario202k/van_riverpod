@@ -32,6 +32,11 @@ class Authentication extends StatelessWidget {
 
               Provider.of<FirestoreDatabase>(context,listen: false).setUid(state.firebaseUser.uid);
 
+              Provider.of<User>(context).setUser(Provider.of<FirestoreDatabase>(context,listen: false)
+                  .userStream());
+
+
+
               return MultiProvider(
                   providers: [
                     StreamProvider<User>.value(

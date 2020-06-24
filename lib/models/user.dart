@@ -1,22 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
-@immutable
+
 class User {
-  final String id;
-  final String email;
-  final String imageUrl;
-  final bool isLogin;
-  final DateTime lastActivity;
-  final String nom;
-  final String password;
-  final String provider;
-  final List genres;
-  final List types ;
+  String id;
+  String email;
+  String imageUrl;
+  bool isLogin;
+  DateTime lastActivity;
+  String nom;
+  String password;
+  String provider;
+  List genres;
+  List types ;
 
 
   User(
-      {@required this.id,
+      {this.id,
       this.email,
       this.imageUrl,
       this.isLogin,
@@ -58,6 +58,31 @@ class User {
       types: map['types'] as List ?? [],
     );
   }
+
+  void setUser(Stream<User> userStream) {
+
+    userStream.listen((user) {
+
+      this.types = user.types;
+      this.genres = user.genres;
+      this.id = user.id;
+      this.email = user.email;
+      this.password = user.password;
+      this.nom = user.nom;
+      this.imageUrl = user.imageUrl;
+      this.lastActivity = user.lastActivity;
+      this.isLogin = user.isLogin;
+      this.provider = user.provider;
+    });
+
+
+  }
+
+  @override
+  String toString() {
+    return 'User{id: $id, email: $email, imageUrl: $imageUrl, isLogin: $isLogin, lastActivity: $lastActivity, nom: $nom, password: $password, provider: $provider, genres: $genres, types: $types}';
+  }
+
 //  Map<String, dynamic> toMap() {
 //    return {
 //      'id': this.id,

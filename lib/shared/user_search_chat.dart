@@ -17,6 +17,10 @@ class UserSearch extends SearchDelegate<User> {
     return Theme.of(context);
   }
 
+
+
+
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
@@ -127,6 +131,7 @@ class UserSearch extends SearchDelegate<User> {
           child: ListView.builder(
             itemBuilder: (context, index) {
 
+              print(state.users[index]);
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ListTile(
@@ -197,6 +202,7 @@ class UserBlocSearchName extends Bloc<UserSearchEvent, UserSearchState> {
       List<User> users = await _getSearchResults(event.query, event.myId);
       yield UserSearchState.success(users);
     } catch (err) {
+
       yield UserSearchState.error();
     }
   }
@@ -226,7 +232,10 @@ class UserBlocSearchName extends Bloc<UserSearchEvent, UserSearchState> {
 //              .map((doc) => User.fromMap(doc.data, doc.documentID))
 //              .toList());
 
-      users = await Firestore.instance.collection('users').getDocuments().then(
+      users = await Firestore.instance.collection('users')
+          .where('email',isGreaterThan:'')
+
+          .getDocuments().then(
           (docs) => docs.documents
               .map((doc) => User.fromMap(doc.data, doc.documentID))
               .toList());
@@ -298,6 +307,7 @@ class UserSearchState {
   }
 
   @override
-  String toString() =>
-      'UserSearchState {users: ${users.toString()}, isLoading: $isLoading, hasError: $hasError }';
+  String toString() {
+    return 'UserSearchState{isLoading: $isLoading, users: $users, hasError: $hasError}';
+  }
 }

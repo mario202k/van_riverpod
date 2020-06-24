@@ -10,6 +10,7 @@ import 'package:vanevents/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:vanevents/bloc/message/message_bloc.dart';
 import 'package:vanevents/bloc/navigation_bloc/navigation_bloc.dart';
 import 'package:vanevents/bloc/simple_bloc_delegate.dart';
+import 'package:vanevents/models/user.dart';
 import 'package:vanevents/repository/user_repository.dart';
 import 'package:vanevents/routing/route.gr.dart';
 import 'package:vanevents/services/firebase_auth_service.dart';
@@ -86,155 +87,166 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider<BoolToggle>(
-          create: (context) => BoolToggle(
-              isEnableNotification: _prefs.getBool('VanEvent') ?? true),
-        ),
-        BlocProvider(
-          create: (context) => AuthenticationBloc(
-              userRepository: _userRepository,
-              seenOnboarding: _prefs.getBool('seen') ?? false)
-            ..add(AuthenticationStarted()),
-        ),
-
-        Provider<UserRepository>(
-          create: (context) => _userRepository,
-        ),
-        Provider<FirestoreDatabase>(
-          create: (context) =>
-              FirestoreDatabase(),
-        ),
-        ChangeNotifierProvider<ValueNotifier<bool>>(
-          create: (context) => ValueNotifier<bool>(false),
-        ),
-        BlocProvider<NavigationBloc>(
-          create: (BuildContext context) => NavigationBloc(),
-        ),
-        BlocProvider<MessageBloc>(
-          create: (BuildContext context) => MessageBloc(),
-        ),
-      ],
-      child: Material(
-        color: Colors.black,
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-              colorScheme: colorScheme,
-              primaryColor: colorScheme.primary,
-              accentColor: colorScheme.secondary,
-              backgroundColor: colorScheme.background,
-              textTheme: TextTheme(
-                bodyText1: GoogleFonts.raleway(
-                  fontSize: 25.0,
-                  color: colorScheme.onBackground,
-                ),
-                bodyText2: GoogleFonts.raleway(
-                  fontSize: 32.0,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onBackground,
-                ),
-                caption: GoogleFonts.sourceCodePro(
-                  fontSize: 11.0,
-                  color: colorScheme.onPrimary,
-                ),
-                headline6: GoogleFonts.raleway(
-                  //App Bar alertdialog.title
-                  fontSize: 31.0,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onPrimary,
-                ),
-                headline5: GoogleFonts.sourceCodePro(
-                  fontSize: 16.0,
-                  color: colorScheme.onBackground,
-                ),
-                overline: GoogleFonts.sourceCodePro(
-                  fontSize: 11.0,
-                  color: colorScheme.onPrimary,
-                ),
-                button: GoogleFonts.sourceCodePro(
-                  fontSize: 17.0,
-                  color: colorScheme.onPrimary,
-                ),
-                subtitle2: GoogleFonts.sourceCodePro(
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onBackground,
-                ),
-              ),
-
-              buttonTheme: ButtonThemeData(
-                  textTheme: ButtonTextTheme.primary,
-                  splashColor: colorScheme.primary,
-                  colorScheme: colorScheme,
-                  buttonColor: colorScheme.primary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20))),
-              cursorColor: colorScheme.onBackground,
-              floatingActionButtonTheme: FloatingActionButtonThemeData(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.primary),
-              inputDecorationTheme: InputDecorationTheme(
-                filled: true,
-                fillColor: Color(0xFFF2F2F2),
-                border: OutlineInputBorder(
-                    borderSide: BorderSide(
-                        color: colorScheme.onBackground,
-                        style: BorderStyle.solid,
-                        width: 2),
-                    borderRadius: BorderRadius.circular(25.0)),
-                focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                        color: colorScheme.onBackground,
-                        style: BorderStyle.solid,
-                        width: 2),
-                    borderRadius: BorderRadius.circular(25.0)),
-                disabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                        color: colorScheme.onBackground,
-                        style: BorderStyle.solid,
-                        width: 2),
-                    borderRadius: BorderRadius.circular(25.0)),
-                enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                        color: colorScheme.onBackground,
-                        style: BorderStyle.solid,
-                        width: 2),
-                    borderRadius: BorderRadius.circular(25.0)),
-                errorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                        color: colorScheme.error,
-                        style: BorderStyle.solid,
-                        width: 2),
-                    borderRadius: BorderRadius.circular(25.0)),
-                focusedErrorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                        color: colorScheme.onBackground,
-                        style: BorderStyle.solid,
-                        width: 2),
-                    borderRadius: BorderRadius.circular(25.0)),
-                labelStyle: GoogleFonts.sourceCodePro(
-                  fontSize: 17.0,
-                  color: colorScheme.onBackground,
-                ),
-                errorStyle: GoogleFonts.sourceCodePro(
-                  fontSize: 11.0,
-                  color: colorScheme.error,
-                ),
-              ),
-              cardTheme: CardTheme(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25))),
-              dividerTheme: DividerThemeData(color: colorScheme.primary,thickness: 2,),
-              ),
-          builder: ExtendedNavigator<Router>(
-            router: Router(),
+        providers: [
+          ChangeNotifierProvider<BoolToggle>(
+            create: (context) => BoolToggle(
+                isEnableNotification: _prefs.getBool('VanEvent') ?? true),
           ),
-          navigatorObservers: [
-            HeroController(),
-          ],
-        ),
-      ),
-    );
+          BlocProvider(
+            create: (context) => AuthenticationBloc(
+                userRepository: _userRepository,
+                seenOnboarding: _prefs.getBool('seen') ?? false)
+              ..add(AuthenticationStarted()),
+          ),
+          Provider<UserRepository>(
+            create: (context) => _userRepository,
+          ),
+          Provider<FirestoreDatabase>(
+            create: (context) => FirestoreDatabase(),
+          ),
+          Provider<User>(
+            create: (context) => User(),
+          ),
+          ChangeNotifierProvider<ValueNotifier<bool>>(
+            create: (context) => ValueNotifier<bool>(false),
+          ),
+          BlocProvider<NavigationBloc>(
+            create: (BuildContext context) => NavigationBloc(),
+          ),
+          BlocProvider<MessageBloc>(
+            create: (BuildContext context) => MessageBloc(),
+          ),
+        ],
+        child: Material(
+            color: Colors.black,
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: ThemeData(
+                colorScheme: colorScheme,
+                primaryColor: colorScheme.primary,
+                accentColor: colorScheme.secondary,
+                backgroundColor: colorScheme.background,
+                textTheme: TextTheme(
+                  bodyText1: GoogleFonts.raleway(
+                    fontSize: 25.0,
+                    color: colorScheme.onBackground,
+                  ),
+                  bodyText2: GoogleFonts.raleway(
+                    fontSize: 32.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onBackground,
+                  ),
+                  caption: GoogleFonts.sourceCodePro(
+                    fontSize: 11.0,
+                    color: colorScheme.onPrimary,
+                  ),
+                  headline6: GoogleFonts.raleway(
+                    //App Bar alertdialog.title
+                    fontSize: 31.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onPrimary,
+                  ),
+                  headline5: GoogleFonts.sourceCodePro(
+                    fontSize: 16.0,
+                    color: colorScheme.onBackground,
+                  ),
+                  overline: GoogleFonts.sourceCodePro(
+                    fontSize: 11.0,
+                    color: colorScheme.onPrimary,
+                  ),
+                  button: GoogleFonts.sourceCodePro(
+                    fontSize: 17.0,
+                    color: colorScheme.onPrimary,
+                  ),
+                  subtitle2: GoogleFonts.sourceCodePro(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onBackground,
+                  ),
+                ),
+                appBarTheme: AppBarTheme(
+                    color: colorScheme.primary,
+                    textTheme: TextTheme(
+                        headline6: GoogleFonts.raleway(
+                      //App Bar alertdialog.title
+                      fontSize: 31.0,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onPrimary,
+                    ))),
+                buttonTheme: ButtonThemeData(
+                    textTheme: ButtonTextTheme.primary,
+                    splashColor: colorScheme.primary,
+                    colorScheme: colorScheme,
+                    buttonColor: colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20))),
+                cursorColor: colorScheme.onBackground,
+                floatingActionButtonTheme: FloatingActionButtonThemeData(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.primary),
+                inputDecorationTheme: InputDecorationTheme(
+                  filled: true,
+                  fillColor: Color(0xFFF2F2F2),
+                  border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: colorScheme.onBackground,
+                          style: BorderStyle.solid,
+                          width: 2),
+                      borderRadius: BorderRadius.circular(25.0)),
+                  focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: colorScheme.onBackground,
+                          style: BorderStyle.solid,
+                          width: 2),
+                      borderRadius: BorderRadius.circular(25.0)),
+                  disabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: colorScheme.onBackground,
+                          style: BorderStyle.solid,
+                          width: 2),
+                      borderRadius: BorderRadius.circular(25.0)),
+                  enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: colorScheme.onBackground,
+                          style: BorderStyle.solid,
+                          width: 2),
+                      borderRadius: BorderRadius.circular(25.0)),
+                  errorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: colorScheme.error,
+                          style: BorderStyle.solid,
+                          width: 2),
+                      borderRadius: BorderRadius.circular(25.0)),
+                  focusedErrorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: colorScheme.onBackground,
+                          style: BorderStyle.solid,
+                          width: 2),
+                      borderRadius: BorderRadius.circular(25.0)),
+                  labelStyle: GoogleFonts.sourceCodePro(
+                    fontSize: 17.0,
+                    color: colorScheme.onBackground,
+                  ),
+                  errorStyle: GoogleFonts.sourceCodePro(
+                    fontSize: 11.0,
+                    color: colorScheme.error,
+                  ),
+                ),
+                cardTheme: CardTheme(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25))),
+                dividerTheme: DividerThemeData(
+                    color: colorScheme.primary,
+                    thickness: 2,
+                    indent: 20,
+                    endIndent: 20),
+              ),
+              builder: ExtendedNavigator<Router>(
+                router: Router(),
+              ),
+              navigatorObservers: [
+                HeroController(),
+              ],
+            )));
   }
 }
