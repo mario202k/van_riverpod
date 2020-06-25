@@ -12,10 +12,8 @@ import 'package:vanevents/bloc/navigation_bloc/navigation_bloc.dart';
 import 'package:vanevents/models/event.dart';
 import 'package:vanevents/models/user.dart';
 import 'package:vanevents/routing/route.gr.dart';
-import 'package:vanevents/screens/model_body.dart';
 import 'package:vanevents/services/firestore_database.dart';
 import 'package:vanevents/shared/toggle_bool_chat_room.dart';
-import 'package:vanevents/shared/topAppBar.dart';
 
 class HomeEvents extends StatefulWidget with NavigationStates {
   const HomeEvents();

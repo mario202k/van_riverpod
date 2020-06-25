@@ -123,7 +123,7 @@ class FirestoreDatabase {
             doc.documents.map((doc) => MyMessage.fromMap(doc.data)).first);
   }
 
-  Stream<int> getChatMessageNonLu(String chatId) {
+  Stream<int> getNbChatMessageNonLu(String chatId) {
     return _db
         .collection('chats')
         .document(chatId)
@@ -385,7 +385,7 @@ class FirestoreDatabase {
   }
 
   void showSnackBar(String val, BuildContext context) {
-    scaffoldKey.currentState.showSnackBar(SnackBar(
+    Scaffold.of(context).showSnackBar(SnackBar(
         backgroundColor: Theme.of(context).colorScheme.error,
         duration: Duration(seconds: 3),
         content: Text(
@@ -665,6 +665,24 @@ class FirestoreDatabase {
         .map((event) => ChatMembre.fromMap(event.data));
   }
 
+  Future<int> nbMessagesNonLu(String chatId) {
+    return _db
+        .collection('chats')
+        .document(chatId)
+        .collection('chatMembres')
+        .document(uid)
+        .get()
+        .then((membre) => _db
+            .collection('chats')
+            .document(chatId)
+            .collection('messages')
+            //.where('idFrom', isEqualTo: uid)
+            .where('date',
+                isGreaterThan: ChatMembre.fromMap(membre.data).lastReading)
+            .getDocuments()
+            .then((messages) => messages.documents.length));
+  }
+
   Stream<List<User>> chatUsersStream(MyChat myChat) {
     return _db
         .collection('users')
@@ -710,8 +728,7 @@ class FirestoreDatabase {
   }
 
   Stream<List<MyEvent>> eventStreamMaSelectionGenre(List genres) {
-
-    if(genres.isEmpty){
+    if (genres.isEmpty) {
       genres = ['none'];
     }
 
@@ -720,11 +737,12 @@ class FirestoreDatabase {
         .where('genres', arrayContainsAny: genres)
         .snapshots()
         .map((docs) => docs.documents
-            .map((doc) => MyEvent.fromMap(doc.data, doc.documentID)).toList());
+            .map((doc) => MyEvent.fromMap(doc.data, doc.documentID))
+            .toList());
   }
-  Stream<List<MyEvent>> eventStreamMaSelectionType(List types) {
 
-    if(types.isEmpty){
+  Stream<List<MyEvent>> eventStreamMaSelectionType(List types) {
+    if (types.isEmpty) {
       types = ['none'];
     }
 
@@ -733,6 +751,7 @@ class FirestoreDatabase {
         .where('types', arrayContainsAny: types)
         .snapshots()
         .map((docs) => docs.documents
-        .map((doc) => MyEvent.fromMap(doc.data, doc.documentID)).toList());
+            .map((doc) => MyEvent.fromMap(doc.data, doc.documentID))
+            .toList());
   }
 }

@@ -6,26 +6,23 @@ import 'package:flutter/services.dart';
 import 'package:flutter_circular_chart/flutter_circular_chart.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:vanevents/models/event.dart';
 import 'package:vanevents/models/formule.dart';
 import 'package:vanevents/screens/model_body.dart';
 import 'package:vanevents/screens/model_screen.dart';
 import 'package:vanevents/services/firestore_database.dart';
 import 'package:vanevents/shared/indicator.dart';
 import 'package:vanevents/shared/toggle_bool_chat_room.dart';
-import 'package:vanevents/shared/topAppBar.dart';
-
-import '../main.dart';
 
 
 class UploadEvent extends StatefulWidget {
-  final String idEvent;
+  final MyEvent myEvent;
 
-  UploadEvent({this.idEvent});
+  UploadEvent({this.myEvent});
 
   @override
   _UploadEventState createState() => _UploadEventState();
@@ -120,7 +117,9 @@ class _UploadEventState extends State<UploadEvent> {
     _nodes = List<FocusScopeNode>.generate(8, (index) => FocusScopeNode());
     addFormule();
 
+    context.read<BoolToggle>().setNullImage();
     super.initState();
+
   }
 
   void addFormule() {
@@ -218,10 +217,11 @@ class _UploadEventState extends State<UploadEvent> {
     final FirestoreDatabase db =
         Provider.of<FirestoreDatabase>(context, listen: false);
     final image = Provider.of<BoolToggle>(context);
+    final isUpdating = widget.myEvent != null;
 
     return ModelScreen(
       child: Scaffold(
-        appBar: AppBar(title: Text('Monitoring'),),
+        appBar: AppBar(title: Text('UploadEvent'),),
 
         body: ModelBody(
           child: Column(
@@ -236,7 +236,7 @@ class _UploadEventState extends State<UploadEvent> {
                       ? Image.file(
                     image.flyer,
                   )
-                      : Icon(
+                      : isUpdating?Image.network(widget.myEvent.imageFlyerUrl): Icon(
                     FontAwesomeIcons.cloudUploadAlt,
                     color: Theme.of(context).colorScheme.primary,
                     size: 220,
@@ -889,7 +889,7 @@ class _UploadEventState extends State<UploadEvent> {
   }
 
   void showSnackBar(String val, BuildContext context) {
-    scaffoldKey.currentState.showSnackBar(SnackBar(
+    Scaffold.of(context).showSnackBar(SnackBar(
         backgroundColor: Colors.blue,
         duration: Duration(seconds: 3),
         content: Text(

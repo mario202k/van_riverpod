@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,11 +9,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:vanevents/bloc/navigation_bloc/navigation_bloc.dart';
 import 'package:vanevents/models/ticket.dart';
 import 'package:vanevents/models/user.dart';
-import 'package:vanevents/screens/model_body.dart';
-import 'package:vanevents/screens/model_screen.dart';
 import 'package:vanevents/services/firestore_database.dart';
 import 'package:vanevents/shared/toggle_bool_chat_room.dart';
-import 'package:vanevents/shared/topAppBar.dart';
 
 class Profil extends StatefulWidget with NavigationStates {
   @override
@@ -287,8 +283,7 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
             height: 20,
           ),
           Divider(
-            color: Theme.of(context).colorScheme.onBackground,
-            thickness: 1,
+
           ),
           SizedBox(
             height: 20,
@@ -383,8 +378,7 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
             },
           ),
           Divider(
-            color: Theme.of(context).colorScheme.onBackground,
-            thickness: 1,
+
           ),
           ListTile(
             leading: Text(
@@ -423,8 +417,7 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
           )
               : SizedBox(),
           Divider(
-            color: Theme.of(context).colorScheme.onBackground,
-            thickness: 1,
+
           ),
           ListTile(
             leading: Text(
@@ -463,8 +456,7 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
           )
               : SizedBox(),
           Divider(
-            color: Theme.of(context).colorScheme.onBackground,
-            thickness: 1,
+
           ),
           ListTile(
             leading: Icon(FontAwesomeIcons.envelope,

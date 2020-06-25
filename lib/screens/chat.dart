@@ -12,14 +12,8 @@ import 'package:vanevents/models/my_chat.dart';
 import 'package:vanevents/models/message.dart';
 import 'package:vanevents/models/user.dart';
 import 'package:vanevents/routing/route.gr.dart';
-import 'package:vanevents/screens/model_body.dart';
 import 'package:vanevents/services/firestore_database.dart';
 import 'package:vanevents/shared/call_utilities.dart';
-import 'package:vanevents/shared/my_event_search_chat.dart';
-import 'package:vanevents/shared/topAppBar.dart';
-import 'dart:math' as math;
-
-import 'package:vanevents/shared/user_search_chat.dart';
 
 class Chat extends StatefulWidget with NavigationStates {
   @override
@@ -29,20 +23,13 @@ class Chat extends StatefulWidget with NavigationStates {
 class _ChatState extends State<Chat> with SingleTickerProviderStateMixin {
   Stream<List<MyChat>> allChat;
   Stream<List<User>> streamUserFriend;
-  AnimationController _animationController;
+
   final double maxSlide = 60.0;
 
-  @override
-  void initState() {
-    super.initState();
 
-    _animationController = AnimationController(
-        duration: const Duration(milliseconds: 400), vsync: this);
-  }
 
   @override
   void dispose() {
-    _animationController.dispose();
     if (allChat != null) {
       allChat = null;
     }
@@ -82,8 +69,7 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin {
               physics: ClampingScrollPhysics(),
                 shrinkWrap: true,
                 separatorBuilder: (context, index) => Divider(
-                  color: Theme.of(context).colorScheme.primary,
-                  thickness: 1,
+
                 ),
                 itemCount: myChat.length,
                 itemBuilder: (context, index) {
@@ -95,7 +81,7 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin {
                   db.getLastChatMessage(chat.id);
 
                   Stream<int> msgNonLu =
-                  db.getChatMessageNonLu(chat.id);
+                  db.getNbChatMessageNonLu(chat.id);
                   User userFriend;
 
                   return Slidable(
@@ -145,217 +131,78 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin {
             );
           },
         ),
-//        AnimatedBuilder(
-//            animation: _animationController,
-//            builder: (context, _) {
-//              return Container(
-//                width: 120,
-//                height: 120,
-//                child: Stack(
-//                  overflow: Overflow.visible,
-//                  children: <Widget>[
-//                    Positioned(
-//                      bottom: 0,
-//                      right: 0,
-//                      child: Transform.translate(
-//                        offset: Offset(-maxSlide * _animationController.value, 0),
-//                        child: Transform.rotate(
-//                          angle: _animationController.value * 2.0 * math.pi,
-//                          child: Transform.scale(
-//                            scale: _animationController.value,
-//                            child: FloatingActionButton(
-//                                heroTag: 1,
-//                                child: Icon(
-//                                  FontAwesomeIcons.userFriends,
-//                                  color:
-//                                  Theme.of(context).colorScheme.onSecondary,
-//                                ),
-//                                onPressed: () async {
-//                                  final User userFriend = await showSearch(
-//                                      context: context,
-//                                      delegate: UserSearch(UserBlocSearchName()));
-//
-//                                  if (userFriend != null) {
-//                                    db
-//                                        .creationChatRoom(userFriend)
-//                                        .then((chatId) {
-//                                      db.getMyChat(chatId).then((myChat) {
-//                                        db.chatUsersFuture(myChat).then((users) {
-//                                          User friend;
-//                                          if (!myChat.isGroupe) {
-//                                            friend = users.firstWhere(
-//                                                    (user) => user.id != db.uid);
-//                                          }
-//                                          ExtendedNavigator.of(context).pushNamed(
-//                                              Routes.chatRoom,
-//                                              arguments: ChatRoomArguments(
-//                                                  chatId: chatId));
-//                                        }).catchError((onError) {
-//                                          print(onError);
-//                                        });
-//                                      }).catchError((onError) {
-//                                        print(onError);
-//                                      });
-//                                    }).catchError((onError) {
-//                                      print(onError);
-//                                    });
-//                                  }
-//                                  //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
-//                                }),
-//                          ),
-//                        ),
-//                      ),
-//                    ),
-//                    Positioned(
-//                      bottom: 0,
-//                      right: 0,
-//                      child: Transform.translate(
-//                        offset: Offset(0, -maxSlide * _animationController.value),
-//                        child: Transform.rotate(
-//                          angle: _animationController.value * 2.0 * math.pi,
-//                          child: Transform.scale(
-//                            scale: _animationController.value,
-//                            child: FloatingActionButton(
-//                                heroTag: 2,
-//                                child: Icon(
-//                                  FontAwesomeIcons.users,
-//                                  color:
-//                                  Theme.of(context).colorScheme.onSecondary,
-//                                ),
-//                                onPressed: () async {
-//                                  await showSearch(
-//                                      context: context,
-//                                      delegate: MyEventSearch(
-//                                          MyEventBlocSearchName()))
-//                                      .then((myEvent) async {
-//                                    if (myEvent != null) {
-//                                      await db
-//                                          .addAmongGroupe(myEvent.chatId)
-//                                          .then((_) {
-//                                        db
-//                                            .getMyChat(myEvent.chatId)
-//                                            .then((myChat) {
-//                                          db
-//                                              .chatUsersFuture(myChat)
-//                                              .then((users) {
-//                                            User friend;
-//                                            if (!myChat.isGroupe) {
-//                                              friend = users.firstWhere(
-//                                                      (user) => user.id != db.uid);
-//                                            }
-//                                            ExtendedNavigator.of(context)
-//                                                .pushNamed(Routes.chatRoom,
-//                                                arguments: ChatRoomArguments(
-//                                                    chatId: myChat.id));
-//                                          });
-//                                        });
-//                                      });
-//                                    }
-//                                  });
-//                                }
-//                              //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
-//                            ),
-//                          ),
-//                        ),
-//                      ),
-//                    ),
-//                    Positioned(
-//                      bottom: 0,
-//                      right: 0,
-//                      child: FloatingActionButton(
-//                          heroTag: 3,
-//                          child: Icon(
-//                            FontAwesomeIcons.search,
-//                            color: Theme.of(context).colorScheme.onSecondary,
-//                          ),
-//                          onPressed: () {
-//
-//                            //NotificationHandler().showOverlayWindow();
-//
-//                            toggleMenu();
-//                          }
-//                        //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
-//                      ),
-//                    ),
-//                  ],
-//                ),
-//              );
-//            }),
       ],
     );
 
   }
 
-  void close() => _animationController.reverse();
 
-  void open() => _animationController.forward();
-
-  void toggleMenu() => _animationController.isCompleted ? close() : open();
-
-  ListTile buildListTile(String titre, MyChat chat, List<User> users,
+  Widget buildListTile(String titre, MyChat chat, List<User> users,
       Stream<MyMessage> lastMsg, User friend, Stream<int> msgNonLu) {
     MyMessage lastMessage;
-    return ListTile(
-      title: Text(
-        titre,
-        style: Theme.of(context).textTheme.subtitle2,
-      ),
-      subtitle: StreamBuilder<MyMessage>(
-          stream: lastMsg,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              lastMessage = MyMessage(message: 'aucun message');
-            } else {
-              lastMessage = snapshot.data;
-            }
-            return subtitle(lastMessage, context);
-          }),
-      onTap: () {
-        ExtendedNavigator.of(context).pushNamed(Routes.chatRoom,
-            arguments: ChatRoomArguments(chatId: chat.id));
-      },
+    return StreamBuilder<MyMessage>(
+        stream: lastMsg,
+      builder: (context, snapshot) {
 
-      leading: Stack(
-        children: <Widget>[
-          CachedNetworkImage(
-            imageUrl: !chat.isGroupe ? friend.imageUrl : chat.imageUrl,
-            imageBuilder: (context, imageProvider) => Container(
-              height: 50,
-              width: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(50)),
-                image: DecorationImage(
-                  image: imageProvider,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            fit: BoxFit.cover,
-            placeholder: (context, url) => Shimmer.fromColors(
-              baseColor: Colors.white,
-              highlightColor: Theme.of(context).colorScheme.primary,
-              child: CircleAvatar(
-                radius: 25,
-              ),
-            ),
-            errorWidget: (context, url, error) => Icon(Icons.error),
+        if (!snapshot.hasData) {
+          lastMessage = MyMessage(message: 'aucun message');
+        } else {
+          lastMessage = snapshot.data;
+        }
+
+
+        return ListTile(
+          title: Text(
+            titre,
+            style: Theme.of(context).textTheme.subtitle2,
           ),
-          !chat.isGroupe
-              ? Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    height: 12,
-                    width: 12,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.black, width: 1),
-                        color: friend.isLogin ? Colors.green : Colors.orange),
+          subtitle: subtitle(lastMessage, context),
+          onTap: () {
+            ExtendedNavigator.of(context).pushNamed(Routes.chatRoom,
+                arguments: ChatRoomArguments(chatId: chat.id));
+          },
+
+          leading: Stack(
+            children: <Widget>[
+              CachedNetworkImage(
+                imageUrl: !chat.isGroupe ? friend.imageUrl : chat.imageUrl,
+                imageBuilder: (context, imageProvider) => Container(
+                  height: 50,
+                  width: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(50)),
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                )
-              : SizedBox()
-        ],
-      ),
+                ),
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: Colors.white,
+                  highlightColor: Theme.of(context).colorScheme.primary,
+                  child: CircleAvatar(
+                    radius: 25,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Icon(Icons.error),
+              ),
+              !chat.isGroupe
+                  ? Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        height: 12,
+                        width: 12,
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.black, width: 1),
+                            color: friend.isLogin ? Colors.green : Colors.orange),
+                      ),
+                    )
+                  : SizedBox()
+            ],
+          ),
 
 //                                      leading: CircleAvatar(
 //                                        backgroundImage: NetworkImage(isUser
@@ -363,40 +210,38 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin {
 //                                            : chatGroupe.imageUrl),
 //                                        radius: 25,
 //                                      ),
-      trailing: Column(
-        children: <Widget>[
-          lastMessage != null
-              ? Text(
-                  //si c'est aujourh'hui l'heure sinon date
-                  DateTime.now().day == lastMessage.date.day
-                      ? 'aujourd\'hui'
-                      : DateFormat('dd/MM/yyyy').format(lastMessage.date),
-                  style: Theme.of(context).textTheme.subtitle1,
-                )
-              : SizedBox(),
-          StreamBuilder(
-              stream: msgNonLu,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return SizedBox();
-                }
+          trailing: Column(
+            children: <Widget>[
+              lastMessage.date != null
+                  ? Text(
+                      //si c'est aujourh'hui l'heure sinon date
+                      DateTime.now().day == lastMessage.date.day
+                          ? 'aujourd\'hui'
+                          : DateFormat('dd/MM/yyyy').format(lastMessage.date),
+                      style: Theme.of(context).textTheme.subtitle1,
+                    )
+                  : SizedBox(),
+              FutureBuilder<int>(
+                  future: Provider.of<FirestoreDatabase>(context,listen: false).nbMessagesNonLu(chat.id),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return SizedBox();
+                    }
 
-                int i = 0;
+                    int i = snapshot.data;
 
-//                                                snapshot.data.documents
-//                                                    .forEach((doc) {
-//                                                  i++;
-//                                                });
-
-                return i != 0
-                    ? Badge(
-                        badgeContent: Text('$i'),
-                        child: Icon(Icons.markunread),
-                      )
-                    : SizedBox();
-              }),
-        ],
-      ),
+                    print(i);
+                    return i != 0
+                        ? Badge(
+                            badgeContent: Text('$i',style: Theme.of(context).textTheme.caption,),
+                            child: Icon(Icons.markunread),
+                          )
+                        : SizedBox();
+                  }),
+            ],
+          ),
+        );
+      }
     );
   }
 

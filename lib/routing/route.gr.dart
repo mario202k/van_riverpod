@@ -16,8 +16,8 @@ import 'package:vanevents/screens/chat_room.dart';
 import 'package:vanevents/screens/full_photo.dart';
 import 'dart:io';
 import 'package:vanevents/screens/upload_event.dart';
-import 'package:vanevents/screens/details.dart';
 import 'package:vanevents/models/event.dart';
+import 'package:vanevents/screens/details.dart';
 import 'package:vanevents/screens/formula_choice.dart';
 import 'package:vanevents/models/formule.dart';
 import 'package:vanevents/screens/qr_code.dart';
@@ -138,7 +138,7 @@ class Router extends RouterBase {
             args as UploadEventArguments ?? UploadEventArguments();
         return PageRouteBuilder<dynamic>(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              UploadEvent(idEvent: typedArgs.idEvent),
+              UploadEvent(myEvent: typedArgs.myEvent),
           settings: settings,
           transitionsBuilder: TransitionsBuilders.zoomIn,
           transitionDuration: const Duration(milliseconds: 300),
@@ -237,8 +237,8 @@ class FullPhotoArguments {
 
 //UploadEvent arguments holder class
 class UploadEventArguments {
-  final String idEvent;
-  UploadEventArguments({this.idEvent});
+  final MyEvent myEvent;
+  UploadEventArguments({this.myEvent});
 }
 
 //Details arguments holder class

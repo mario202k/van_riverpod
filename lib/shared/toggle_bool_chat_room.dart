@@ -103,7 +103,11 @@ class BoolToggle with ChangeNotifier {
   }
 
   void setNullImage() {
+    print('//coucou');
     imageProfil = null;
+    flyer = null;
+    banner = null;
+    photos = null;
   }
 
   void setObscureTextRegister() {

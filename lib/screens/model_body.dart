@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../main.dart';
 
 class ModelBody extends StatelessWidget {
   final Widget  child;
@@ -14,7 +13,6 @@ class ModelBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: scaffoldKey,
       backgroundColor: Theme.of(context).colorScheme.background,
       body: LayoutBuilder(builder: (context, constraints) {
         return SingleChildScrollView(

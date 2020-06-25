@@ -159,11 +159,7 @@ class _DetailsState extends State<Details> {
                 SizedBox(
                   height: 25,
                 ),
-                Container(
-                  height: 1,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.rectangle, color: Colors.black26),
-                ),
+                Divider(),
                 Padding(
                   padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
                   child: Text(
@@ -206,11 +202,7 @@ class _DetailsState extends State<Details> {
                 SizedBox(
                   height: 25,
                 ),
-                Container(
-                  height: 1,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.rectangle, color: Colors.black26),
-                ),
+                Divider(),
                 SizedBox(
                   height: 25,
                 ),
@@ -272,11 +264,7 @@ class _DetailsState extends State<Details> {
                         fit: BoxFit.scaleDown,
                       );
                     }),
-                Container(
-                  height: 1,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.rectangle, color: Colors.black26),
-                ),
+                Divider(),
                 SizedBox(
                   height: 25,
                 ),

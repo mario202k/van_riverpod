@@ -12,7 +12,6 @@ import 'dart:io';
 import 'package:vanevents/models/participant.dart';
 import 'package:vanevents/models/ticket.dart';
 import 'package:vanevents/models/user.dart';
-import 'package:vanevents/screens/base_screen.dart';
 import 'package:vanevents/services/firestore_database.dart';
 
 
@@ -502,18 +501,11 @@ class _CardParticipantState extends State<CardParticipant> {
                     children: <Widget>[
                       FormBuilderTextField(
                         keyboardType: TextInputType.text,
-                        style: TextStyle(color: Colors.white),
-                        cursorColor: Colors.white,
+                        //style: TextStyle(color: Colors.white),
+                        //cursorColor: Colors.white,
                         attribute: 'nom',
                         decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.white, width: 2),
-                              borderRadius: BorderRadius.circular(25.0)),
                           labelText: 'Nom',
-                          labelStyle: TextStyle(color: Colors.white),
-                          border: InputBorder.none,
-                          errorStyle: TextStyle(color: Colors.white),
                         ),
                         focusNode: _nom,
                         onEditingComplete: () {
@@ -544,6 +536,7 @@ class _CardParticipantState extends State<CardParticipant> {
                     if (regex.allMatches(val).length == 0) {
                       return 'Entre 2 et 30, ';
                     }
+                    return null;
                   },
                         ],
                       ),
@@ -552,18 +545,11 @@ class _CardParticipantState extends State<CardParticipant> {
                       ),
                       FormBuilderTextField(
                         keyboardType: TextInputType.text,
-                        style: TextStyle(color: Colors.white),
-                        cursorColor: Colors.white,
+//                        style: TextStyle(color: Colors.white),
+//                        cursorColor: Colors.white,
                         attribute: 'prenom',
                         decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.white, width: 2),
-                              borderRadius: BorderRadius.circular(25.0)),
                           labelText: 'Prénom',
-                          labelStyle: TextStyle(color: Colors.white),
-                          border: InputBorder.none,
-                          errorStyle: TextStyle(color: Colors.white),
                         ),
                         focusNode: _prenom,
                         onEditingComplete: () {
@@ -594,6 +580,7 @@ class _CardParticipantState extends State<CardParticipant> {
                             if (regex.allMatches(val).length == 0) {
                               return 'Entre 2 et 30, ';
                             }
+                            return null;
                           },
                         ],
                       )

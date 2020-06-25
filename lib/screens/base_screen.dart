@@ -125,7 +125,7 @@ class _BaseScreensState extends State<BaseScreens>
             Align(
               alignment: Alignment.bottomCenter,
               child: CurvedNavigationBar(
-                backgroundColor: Theme.of(context).colorScheme.background,
+                backgroundColor: Colors.transparent,
                 index: i,
                 color: Theme.of(context).colorScheme.primary,
                 height: 45,

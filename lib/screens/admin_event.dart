@@ -117,7 +117,7 @@ class _AdminEventsState extends State<AdminEvents> {
                               onTap: () => ExtendedNavigator.of(context)
                                   .pushNamed(Routes.uploadEvent,
                                       arguments: UploadEventArguments(
-                                          idEvent: events.elementAt(index).id)),
+                                          myEvent: events.elementAt(index))),
                             )
                           ],
                           child: ListTile(

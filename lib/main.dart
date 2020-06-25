@@ -27,8 +27,6 @@ void main() {
   });
 }
 
-GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
-
 void callBackFunction(String tag) {
   switch (tag) {
     case "simple_button":
@@ -70,7 +68,7 @@ class MyApp extends StatelessWidget {
       primaryVariant: const Color(0xFFdf78ef),
       secondary: const Color(0xFFffcccb),
       secondaryVariant: const Color(0xFF039be5),
-      background: const Color(0xFFfce4ec),
+      background: const Color(0xFFFFFFFF),
       surface: const Color(0xFF039be5),
 //      secondary: const Color(0xFF218b0e),
 //      secondaryVariant: const Color(0xFF00600f),
@@ -185,8 +183,8 @@ class MyApp extends StatelessWidget {
                     backgroundColor: colorScheme.primary,
                     foregroundColor: colorScheme.primary),
                 inputDecorationTheme: InputDecorationTheme(
-                  filled: true,
-                  fillColor: Color(0xFFF2F2F2),
+//                  filled: true,
+//                  fillColor: Color(0xFFF2F2F2),
                   border: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: colorScheme.onBackground,
@@ -237,9 +235,9 @@ class MyApp extends StatelessWidget {
                         borderRadius: BorderRadius.circular(25))),
                 dividerTheme: DividerThemeData(
                     color: colorScheme.primary,
-                    thickness: 2,
-                    indent: 20,
-                    endIndent: 20),
+                    thickness: 1,
+                    indent: 30,
+                    endIndent: 30),
               ),
               builder: ExtendedNavigator<Router>(
                 router: Router(),
