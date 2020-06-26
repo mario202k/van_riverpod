@@ -665,22 +665,24 @@ class FirestoreDatabase {
         .map((event) => ChatMembre.fromMap(event.data));
   }
 
-  Future<int> nbMessagesNonLu(String chatId) {
+  Stream<Stream<List<MyMessage>>> nbMessagesNonLu(String chatId) {
     return _db
         .collection('chats')
         .document(chatId)
         .collection('chatMembres')
         .document(uid)
-        .get()
-        .then((membre) => _db
+        .snapshots()
+        .map((membre) => _db
             .collection('chats')
             .document(chatId)
             .collection('messages')
             //.where('idFrom', isEqualTo: uid)
             .where('date',
                 isGreaterThan: ChatMembre.fromMap(membre.data).lastReading)
-            .getDocuments()
-            .then((messages) => messages.documents.length));
+            .snapshots()
+            .map((docs) => docs.documents
+                .map((msg) => MyMessage.fromMap(msg.data))
+                .toList()));
   }
 
   Stream<List<User>> chatUsersStream(MyChat myChat) {

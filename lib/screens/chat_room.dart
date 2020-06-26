@@ -65,12 +65,6 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver,AfterIn
       listKey.currentState.insertItem(0, duration: Duration(milliseconds: 500));
     }
 
-//    SchedulerBinding.instance.addPostFrameCallback((_) {
-//      _scrollController.animateTo(
-//          _scrollController.position.minScrollExtent,
-//          duration: Duration(milliseconds: 250),
-//          curve: Curves.easeInOut);
-//    });
   }
 
   @override
@@ -81,6 +75,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver,AfterIn
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
+    //boolChatRoom.setAllFalse();
     super.initState();
   }
 
@@ -344,11 +339,14 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver,AfterIn
   void initChat(MessageState state, BuildContext context) {
     myChat = state.myChat;
     membres = state.membres;
-    
-    friend = state.membres.firstWhere(
-            (user) => user.id != db.uid);
+
+
     
     if (!myChat.isGroupe) {
+      if(state.membres != null){
+        friend = state.membres.firstWhere(
+                (user) => user.id != db.uid);
+      }
       db.setIsReading(myChat.id);
       streamUserFriend = db.userFriendStream(friend.id);
       //context.select<FirestoreDatabase,void>((value) => null)

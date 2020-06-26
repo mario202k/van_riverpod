@@ -13,6 +13,7 @@ import 'package:vanevents/screens/model_screen.dart';
 import 'package:vanevents/services/firebase_cloud_messaging.dart';
 import 'package:vanevents/services/firestore_database.dart';
 import 'package:vanevents/shared/my_event_search_chat.dart';
+import 'package:vanevents/shared/toggle_bool_chat_room.dart';
 import 'package:vanevents/shared/topAppBar.dart';
 import 'dart:math' as math;
 
@@ -55,6 +56,8 @@ class _BaseScreensState extends State<BaseScreens>
     initNotification();
 
     //NotificationApnHandler().initializeApnNotification(user.id,context);
+
+
   }
 
   void initNotification() async {
@@ -65,6 +68,7 @@ class _BaseScreensState extends State<BaseScreens>
 
   @override
   void dispose() {
+    print('//');
     _animationController.dispose();
     WidgetsBinding.instance.removeObserver(this);
 
@@ -102,6 +106,7 @@ class _BaseScreensState extends State<BaseScreens>
     return BlocBuilder<NavigationBloc, NavigationStates>(
         builder: (BuildContext context, NavigationStates state) {
       print(state.toString());
+      print('Basescreen');
       int i = 0;
       switch (state.toString()) {
         case 'HomeEvents':
@@ -356,9 +361,6 @@ class _BaseScreensState extends State<BaseScreens>
     });
   }
 
-  @override
-  // TODO: implement wantKeepAlive
-  bool get wantKeepAlive => true;
 }
 
 //class MySingletonFCM {
@@ -656,10 +658,4 @@ class _BaseScreensState extends State<BaseScreens>
 //
 //  Future<String> _downloadAndSaveImage(String url, String fileName) async {
 //    var directory = await getApplicationDocumentsDirectory();
-//    var filePath = '${directory.path}/$fileName';
-//    var response = await http.get(url);
-//    var file = File(filePath);
-//    await file.writeAsBytes(response.bodyBytes);
-//    return filePath;
-//  }
-//}
+//    var filePath = '${directory.
