@@ -1,17 +1,16 @@
+import 'dart:math' as math;
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'dart:math' as math;
-
-import 'package:provider/provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:vanevents/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:vanevents/bloc/navigation_bloc/navigation_bloc.dart';
-import 'package:vanevents/models/user.dart';
-import 'package:vanevents/repository/user_repository.dart';
+import 'package:vanevents/provider/provider.dart';
 import 'package:vanevents/routing/route.gr.dart';
-import 'package:vanevents/services/firestore_database.dart';
-
 
 class CustomDrawer extends StatefulWidget {
   final Widget child;
@@ -26,7 +25,7 @@ class CustomDrawer extends StatefulWidget {
 }
 
 class CustomDrawerState extends State<CustomDrawer>
-    with SingleTickerProviderStateMixin {
+    with WidgetsBindingObserver,SingleTickerProviderStateMixin {
   final double maxSlide = 300.0;
   AnimationController _animationController;
   bool _canBeDragged = false;
@@ -35,6 +34,7 @@ class CustomDrawerState extends State<CustomDrawer>
   void initState() {
     // TODO: implement initState
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _animationController = AnimationController(
       vsync: this,
@@ -45,7 +45,27 @@ class CustomDrawerState extends State<CustomDrawer>
   @override
   void dispose() {
     _animationController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    switch (state) {
+      case AppLifecycleState.paused:
+        context.read(firestoreDatabaseProvider).setInactive();
+        break;
+      case AppLifecycleState.resumed:
+        context.read(firestoreDatabaseProvider).setOnline();
+        break;
+      case AppLifecycleState.inactive:
+        context.read(firestoreDatabaseProvider).setInactive();
+        break;
+      case AppLifecycleState.detached:
+        context.read(firestoreDatabaseProvider).setInactive();
+        break;
+    }
   }
 
   void toggleDrawer() => _animationController.isCompleted ? close() : open();
@@ -84,6 +104,7 @@ class CustomDrawerState extends State<CustomDrawer>
 
   @override
   Widget build(BuildContext context) {
+
     return WillPopScope(
       onWillPop: () async {
         if (_animationController.isCompleted) {
@@ -137,11 +158,13 @@ class CustomDrawerState extends State<CustomDrawer>
                   ),
                   Positioned(
                     top: 16.0 + MediaQuery.of(context).padding.top,
-                    left: 50+_animationController.value *
-                        MediaQuery.of(context).size.width,
+                    left: 50 +
+                        _animationController.value *
+                            MediaQuery.of(context).size.width,
                     width: MediaQuery.of(context).size.width,
                     child: BlocBuilder<NavigationBloc, NavigationStates>(
-                        builder: (BuildContext context, NavigationStates state) {
+                        builder:
+                            (BuildContext context, NavigationStates state) {
                       return Text(
                         state.toString(),
                         style: Theme.of(context).textTheme.headline6,
@@ -157,9 +180,13 @@ class CustomDrawerState extends State<CustomDrawer>
   }
 }
 
-class MyDrawer extends StatelessWidget {
+class MyDrawer extends HookWidget {
   @override
   Widget build(BuildContext context) {
+    final myUserStream = context.read(streamMyUserProvider);
+    final myUser = context.read(myUserProvider);
+    final firestore = context.read(firestoreDatabaseProvider);
+
     return SizedBox(
         width: 300,
         height: double.infinity,
@@ -184,7 +211,8 @@ class MyDrawer extends StatelessWidget {
                             translation: Offset(0.0, 2.1),
                             child: RawMaterialButton(
                               onPressed: () {
-                                BlocProvider.of<NavigationBloc>(context).add(NavigationEvents.Profil);
+                                BlocProvider.of<NavigationBloc>(context)
+                                    .add(NavigationEvents.Profil);
 
                                 CustomDrawer.of(context).close();
                               },
@@ -198,24 +226,34 @@ class MyDrawer extends StatelessWidget {
                                   color: Theme.of(context).colorScheme.primary,
                                 ),
                                 child: SizedBox(
-                                  width: constraints.maxWidth,
-                                  height: 50,
-                                  child: Center(
-                                    child:
-
-                                    Consumer<User>(
-                                      builder: (context, user, child) {
-                                        return Text(
-                                          user.nom ?? '',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
+                                    width: constraints.maxWidth,
+                                    height: 50,
+                                    child: myUserStream.when(
+                                        data: (myUser) {
+                                          return Text(myUser.nom ?? 'Anonymous',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                              ));
+                                        },
+                                        loading: () => Shimmer.fromColors(
+                                              baseColor: Colors.white,
+                                              highlightColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                              child: Container(
+                                                width: 220,
+                                                height: 220,
+                                                //color: Colors.white,
+                                                decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                25)),
+                                                    color: Colors.white),
+                                              ),
+                                            ),
+                                        error: (err, stack) => SizedBox())),
                               ),
                             ),
                           ),
@@ -225,36 +263,51 @@ class MyDrawer extends StatelessWidget {
                                 radius: 59,
                                 backgroundColor:
                                     Theme.of(context).colorScheme.secondary,
-                                child: Consumer<User>(
-                                  builder: (context, user, child) {
-                                    return user.imageUrl != null
-                                        ? CircleAvatar(
-                                            backgroundImage:
-                                                NetworkImage(user.imageUrl),
-                                            radius: 57,
-                                            child: RawMaterialButton(
-                                              shape: const CircleBorder(),
-                                              splashColor:
-                                                  Colors.grey.withOpacity(0.4),
-                                              onPressed: () {
-                                                BlocProvider.of<NavigationBloc>(context).add(NavigationEvents.Profil);
-                                                CustomDrawer.of(context)
-                                                    .close();
-                                              },
-                                              padding:
-                                                  const EdgeInsets.all(57.0),
-                                            ),
-                                          )
-                                        : SizedBox();
-                                  },
-                                ),
+                                child: myUserStream.when(
+                                    data: (myUser) => CircleAvatar(
+                                          backgroundImage: myUser.imageUrl !=
+                                                  null
+                                              ? NetworkImage(myUser.imageUrl)
+                                              : AssetImage(
+                                                  'assets/img/normal_user_icon.png'),
+                                          radius: 57,
+                                          child: RawMaterialButton(
+                                            shape: const CircleBorder(),
+                                            splashColor:
+                                                Colors.grey.withOpacity(0.4),
+                                            onPressed: () {
+                                              BlocProvider.of<NavigationBloc>(
+                                                      context)
+                                                  .add(NavigationEvents.Profil);
+                                              CustomDrawer.of(context).close();
+                                            },
+                                            padding: const EdgeInsets.all(57.0),
+                                          ),
+                                        ),
+                                    loading: () => Shimmer.fromColors(
+                                          baseColor: Colors.white,
+                                          highlightColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          child: Container(
+                                            width: 220,
+                                            height: 220,
+                                            //color: Colors.white,
+                                            decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(25)),
+                                                color: Colors.white),
+                                          ),
+                                        ),
+                                    error: (err, stack) => SizedBox()),
                               )),
                         ],
                         //mainAxisAlignment: MainAxisAlignment.center,
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 60,left: 15,right: 15),
+                      padding: const EdgeInsets.only(
+                          bottom: 60, left: 15, right: 15),
                       child: SizedBox(
                         height: 340,
                         child: Column(
@@ -263,11 +316,8 @@ class MyDrawer extends StatelessWidget {
                           children: <Widget>[
                             Container(
                               decoration: BoxDecoration(
-                                borderRadius:
-                                BorderRadius.circular(25),
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary,
+                                borderRadius: BorderRadius.circular(25),
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                               child: ListTile(
                                 title: Text(
@@ -280,18 +330,16 @@ class MyDrawer extends StatelessWidget {
                                   size: 22,
                                 ),
                                 onTap: () {
-                                  BlocProvider.of<NavigationBloc>(context).add(NavigationEvents.Chat);
+                                  BlocProvider.of<NavigationBloc>(context)
+                                      .add(NavigationEvents.Chat);
                                   CustomDrawer.of(context).close();
                                 },
                               ),
                             ),
                             Container(
                               decoration: BoxDecoration(
-                                borderRadius:
-                                BorderRadius.circular(25),
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary,
+                                borderRadius: BorderRadius.circular(25),
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                               child: ListTile(
                                 title: Text(
@@ -304,18 +352,16 @@ class MyDrawer extends StatelessWidget {
                                   size: 22,
                                 ),
                                 onTap: () {
-                                  BlocProvider.of<NavigationBloc>(context).add(NavigationEvents.Billets);
+                                  BlocProvider.of<NavigationBloc>(context)
+                                      .add(NavigationEvents.Billets);
                                   CustomDrawer.of(context).close();
                                 },
                               ),
                             ),
                             Container(
                               decoration: BoxDecoration(
-                                borderRadius:
-                                BorderRadius.circular(25),
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary,
+                                borderRadius: BorderRadius.circular(25),
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                               child: ListTile(
                                 title: Text(
@@ -331,11 +377,8 @@ class MyDrawer extends StatelessWidget {
                             ),
                             Container(
                               decoration: BoxDecoration(
-                                borderRadius:
-                                BorderRadius.circular(25),
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary,
+                                borderRadius: BorderRadius.circular(25),
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                               child: ListTile(
                                 title: Text(
@@ -347,43 +390,72 @@ class MyDrawer extends StatelessWidget {
                                   color: Colors.white,
                                   size: 22,
                                 ),
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius:
-                                BorderRadius.circular(25),
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary,
-                              ),
-                              child: ListTile(
-                                title: Text(
-                                  'Admin Events',
-                                  style: Theme.of(context).textTheme.button,
-                                ),
-                                leading: Icon(
-                                  FontAwesomeIcons.userCog,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
                                 onTap: () {
                                   ExtendedNavigator.of(context)
-                                      .pushNamed(Routes.adminEvents);
+                                      .push(Routes.stripeProfile);
                                 },
                               ),
                             ),
+                            myUser.typeDeCompte == 1
+                                ? Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(25),
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                    child: ListTile(
+                                      title: Text(
+                                        'Admin Events',
+                                        style:
+                                            Theme.of(context).textTheme.button,
+                                      ),
+                                      leading: Icon(
+                                        FontAwesomeIcons.userCog,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                      onTap: () {
+                                        ExtendedNavigator.of(context)
+                                            .push(Routes.adminEvents);
+                                      },
+                                    ),
+                                  )
+                                : myUser.typeDeCompte == 0
+                                    ? Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(25),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
+                                        child: ListTile(
+                                          title: Text(
+                                            'Admin Organisateur',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .button,
+                                          ),
+                                          leading: Icon(
+                                            FontAwesomeIcons.userCog,
+                                            color: Colors.white,
+                                            size: 22,
+                                          ),
+                                          onTap: () {
+                                            ExtendedNavigator.of(context).push(
+                                                Routes.adminOrganisateurs);
+                                          },
+                                        ),
+                                      )
+                                    : SizedBox(),
                           ],
                         ),
                       ),
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        borderRadius:
-                        BorderRadius.circular(25),
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary,
+                        borderRadius: BorderRadius.circular(25),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       child: ListTile(
                         title: Text(
@@ -396,9 +468,10 @@ class MyDrawer extends StatelessWidget {
                           color: Colors.white,
                         ),
                         onTap: () async {
-                          context.read<FirestoreDatabase>().setInactive();
-                          context.read<UserRepository>().signOut();
-                          context.bloc<AuthenticationBloc>().add(AuthenticationLoggedOut());
+                          firestore.setInactive();
+                          context
+                              .bloc<AuthenticationBloc>()
+                              .add(AuthenticationLoggedOut());
                         },
                       ),
                     ),

@@ -1,70 +1,22 @@
+
 import 'dart:io';
+import 'dart:math' as math;
+
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
-import 'package:vanevents/models/user.dart';
-import 'package:vanevents/services/firestore_database.dart';
-import 'package:vanevents/shared/custom_drawer.dart';
-import 'dart:math' as math;
+import 'package:vanevents/provider/provider.dart';
+import 'package:vanevents/shared/clip_shadow_path.dart';
 
-class TopAppBar extends StatefulWidget {
+class TopAppBar extends HookWidget {
   final String title;
-  final bool isMenu;
-  final double widthContainer;
   final double heightContainer = 120;
 
-  TopAppBar(this.title, this.isMenu, this.widthContainer);
-
-  @override
-  _TopAppBarState createState() => _TopAppBarState();
-}
-
-class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
-  bool startAnimation = false;
-  AnimationController animationController;
-  AnimationController animationControllerWave;
-  bool disposed = false;
-  final StorageReference _storageReference = FirebaseStorage.instance.ref();
-
-  User user;
-
-  _afterLayout(_) {
-    setState(() {
-      startAnimation = !startAnimation;
-    });
-  }
-
-  @override
-  void initState() {
-    if (widget.isMenu) {
-      animationControllerWave = AnimationController(
-          value: 0.0,
-          duration: Duration(seconds: 4),
-          upperBound: 1,
-          lowerBound: -1,
-          vsync: this)
-        ..repeat();
-
-      animationController = AnimationController(
-          vsync: this, duration: Duration(milliseconds: 400));
-    }
-    WidgetsBinding.instance.addPostFrameCallback(_afterLayout);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    if (widget.isMenu) {
-      disposed = true;
-      if (animationController != null) animationController.dispose();
-    }
-
-    super.dispose();
-  }
+  TopAppBar(this.title);
 
   void showDialogSource(BuildContext context) {
     showDialog<void>(
@@ -80,14 +32,14 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
                 FlatButton(
                   child: Text('Caméra'),
                   onPressed: () {
-                    getImageCamera();
+                    getImageCamera(context);
                     Navigator.of(context).pop();
                   },
                 ),
                 FlatButton(
                   child: Text('Galerie'),
                   onPressed: () {
-                    getImageGallery();
+                    getImageGallery(context);
                     Navigator.of(context).pop();
                   },
                 ),
@@ -103,14 +55,14 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
                 FlatButton(
                   child: Text('Caméra'),
                   onPressed: () {
-                    getImageCamera();
+                    getImageCamera(context);
                     Navigator.of(context).pop();
                   },
                 ),
                 FlatButton(
                   child: Text('Galerie'),
                   onPressed: () {
-                    getImageGallery();
+                    getImageGallery(context);
                     Navigator.of(context).pop();
                   },
                 ),
@@ -125,50 +77,44 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
     return url.toString();
   }
 
-  Future getImageGallery() async {
+  Future getImageGallery(BuildContext context) async {
     File imageProfil = await ImagePicker.pickImage(source: ImageSource.gallery);
 
     //création du path pour le flyer
-    await uploadImageProfil(imageProfil);
+    await uploadImageProfil(imageProfil,context);
   }
 
-  Future getImageCamera() async {
+  Future getImageCamera(BuildContext context) async {
     File imageProfil = await ImagePicker.pickImage(source: ImageSource.camera);
-    await uploadImageProfil(imageProfil);
+    await uploadImageProfil(imageProfil,context);
   }
 
-  Future uploadImageProfil(File imageProfil) async {
+  Future uploadImageProfil(File imageProfil,BuildContext context) async {
     //création du path pour le flyer
     String pathprofil =
         imageProfil.path.substring(imageProfil.path.lastIndexOf('/') + 1);
 
-    StorageUploadTask uploadTaskFlyer = _storageReference
+    StorageUploadTask uploadTaskFlyer = FirebaseStorage.instance.ref()
         .child('imageProfil')
-        .child(context.read<User>().id)
+        .child(context.read(myUserProvider).id)
         .child("/$pathprofil")
         .putFile(imageProfil);
 
     String urlFlyer = await uploadImage(uploadTaskFlyer);
 
-    await context.read<FirestoreDatabase>().updateUserImageProfil(urlFlyer);
+    await context.read(firestoreDatabaseProvider).updateMyUserImageProfil(urlFlyer);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isMenu) {
-      user = Provider.of<User>(context, listen: false);
-      final toggle = Provider.of<ValueNotifier<bool>>(context, listen: false);
-
-      toggle.addListener(() {
-        if (!disposed) {
-          if (toggle.value) {
-            animationController.forward();
-          } else {
-            animationController.reverse();
-          }
-        }
-      });
-    }
+    final double  d = 0.0;
+    final animationControllerWave = useAnimationController(
+        initialValue:  d,
+        duration: const Duration(seconds: 4),
+        upperBound: 1,
+        lowerBound: -1
+    )..repeat();
+    final user = useProvider(myUserProvider);
 
     return Stack(
       alignment: Alignment.center,
@@ -180,39 +126,19 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
               color: Theme.of(context).colorScheme.primary,
               width: double.infinity,
               height: 120,
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                children: <Widget>[
-                  IconButton(
-                    icon: widget.isMenu
-                        ? SizedBox()
-//                  AnimatedIcon(
-//                          icon: AnimatedIcons.menu_arrow,
-//                          progress: animationController,
-//                          color: Theme.of(context).colorScheme.onSecondary,
-//                        )
-                        : Icon(
-                      Platform.isAndroid
-                          ? Icons.arrow_back
-                          : Icons.arrow_back_ios,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    onPressed: () {
-                      widget.isMenu
-                          ? CustomDrawer.of(context).open()
-                          : Navigator.pop(context);
-                    },
-                  ),
-                ],
-              ),
             ),
             builder: (context, child) {
-              return ClipPath(
+              return ClipShadowPath(
+                shadow: BoxShadow(
+                    color: Colors.black,
+                    //offset: Offset(-5,3),
+                    blurRadius: 5,
+                    spreadRadius: 15),
                 clipper: ClippingClass(animationControllerWave.value),
                 child: child,
               );
             }),
-        widget.title == 'Profil'
+        title == 'Profil'
             ? Positioned(
                 top: 22,
                 child: GestureDetector(
@@ -230,7 +156,9 @@ class _TopAppBarState extends State<TopAppBar> with TickerProviderStateMixin {
                               Theme.of(context).colorScheme.primary,
                           child: CircleAvatar(
                             radius: 50,
-                            backgroundImage: NetworkImage(user.imageUrl),
+                            backgroundImage: user.imageUrl != null
+                                ? NetworkImage(user.imageUrl)
+                                : AssetImage('assets/img/normal_user_icon.png'),
                           ),
                         ),
                         Positioned(
@@ -284,13 +212,12 @@ class ClippingClass extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
-
     Path path = Path();
     path.lineTo(0, size.height * 0.6);
 
     path.quadraticBezierTo(
-        size.width*1.6   * math.sin(move * slice),
-        size.height*0.3  * math.cos(move * slice)+60,
+        size.width * 1.6 * math.sin(move * slice),
+        size.height * 0.3 * math.cos(move * slice) + 60,
         size.width,
         size.height * 0.6);
     path.lineTo(size.width, 0);

@@ -1,11 +1,9 @@
 import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:vanevents/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:vanevents/bloc/register/bloc/register_bloc.dart';
 import 'package:vanevents/bloc/register/bloc/register_event.dart';
 import 'package:vanevents/bloc/register/bloc/register_state.dart';
@@ -93,7 +91,7 @@ class RegisterForm extends StatelessWidget {
                     )),
                 FormBuilder(
                   key: _fbKey,
-                  autovalidate: false,
+                  //autovalidate: false,
                   child: Column(
                     children: <Widget>[
                       Padding(
@@ -102,9 +100,9 @@ class RegisterForm extends StatelessWidget {
                           keyboardType: TextInputType.text,
                           style: TextStyle(
                               color:
-                                  Theme.of(context).colorScheme.onBackground),
+                              Theme.of(context).colorScheme.onBackground),
                           cursorColor:
-                              Theme.of(context).colorScheme.onBackground,
+                          Theme.of(context).colorScheme.onBackground,
                           attribute: 'Nom et prénom',
                           maxLines: 1,
                           decoration: InputDecoration(
@@ -133,12 +131,12 @@ class RegisterForm extends StatelessWidget {
                           validators: [
                             FormBuilderValidators.required(
                                 errorText: 'Champs requis'),
-                            (val) {
+                                (val) {
                               RegExp regex = RegExp(
-                                  r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,15}$');
+                                  r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,40}$');
 
                               if (regex.allMatches(val).length == 0) {
-                                return 'Entre 2 et 15, ';
+                                return 'Entre 2 et 40, ';
                               }
                               return null;
                             },
@@ -151,9 +149,9 @@ class RegisterForm extends StatelessWidget {
                           keyboardType: TextInputType.emailAddress,
                           style: TextStyle(
                               color:
-                                  Theme.of(context).colorScheme.onBackground),
+                              Theme.of(context).colorScheme.onBackground),
                           cursorColor:
-                              Theme.of(context).colorScheme.onBackground,
+                          Theme.of(context).colorScheme.onBackground,
                           attribute: 'Email',
                           maxLines: 1,
                           decoration: InputDecoration(
@@ -193,13 +191,13 @@ class RegisterForm extends StatelessWidget {
                           keyboardType: TextInputType.text,
                           style: TextStyle(
                               color:
-                                  Theme.of(context).colorScheme.onBackground),
+                              Theme.of(context).colorScheme.onBackground),
                           cursorColor:
-                              Theme.of(context).colorScheme.onBackground,
+                          Theme.of(context).colorScheme.onBackground,
                           attribute: 'Mot de passe',
                           maxLines: 1,
                           obscureText:
-                              context.watch<BoolToggle>().obscureTextLogin,
+                          context.watch<BoolToggle>().obscureTextLogin,
                           decoration: InputDecoration(
                             labelText: 'Mot de passe',
                             icon: Icon(
@@ -235,12 +233,13 @@ class RegisterForm extends StatelessWidget {
                           validators: [
                             FormBuilderValidators.required(
                                 errorText: 'Champs requis'),
-                            (val) {
+                                (val) {
                               RegExp regex = new RegExp(
                                   r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$');
                               if (regex.allMatches(val).length == 0) {
                                 return 'Entre 8 et 15, 1 majuscule, 1 minuscule, 1 chiffre';
                               }
+                              return null;
                             },
                           ],
                         ),
@@ -251,13 +250,13 @@ class RegisterForm extends StatelessWidget {
                           keyboardType: TextInputType.text,
                           style: TextStyle(
                               color:
-                                  Theme.of(context).colorScheme.onBackground),
+                              Theme.of(context).colorScheme.onBackground),
                           cursorColor:
-                              Theme.of(context).colorScheme.onBackground,
+                          Theme.of(context).colorScheme.onBackground,
                           attribute: 'Confirmation',
                           maxLines: 1,
                           obscureText:
-                              context.watch<BoolToggle>().obscuretextRegister,
+                          context.watch<BoolToggle>().obscuretextRegister,
                           decoration: InputDecoration(
                             labelText: 'Confirmation',
                             icon: Icon(
@@ -292,7 +291,7 @@ class RegisterForm extends StatelessWidget {
                           validators: [
                             FormBuilderValidators.required(
                                 errorText: 'Champs requis'),
-                            (val) {
+                                (val) {
                               if (_passwordController.text != val)
                                 return 'Pas identique';
                             },
@@ -318,45 +317,45 @@ class RegisterForm extends StatelessWidget {
         context: context,
         builder: (_) => Platform.isAndroid
             ? AlertDialog(
-                title: Text('Source?'),
-                content: Text('Veuillez choisir une source'),
-                actions: <Widget>[
-                  FlatButton(
-                    child: Text('Caméra'),
-                    onPressed: () {
-                      context.read<BoolToggle>().getImageCamera('Profil');
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  FlatButton(
-                    child: Text('Galerie'),
-                    onPressed: () {
-                      context.read<BoolToggle>().getImageGallery('Profil');
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              )
+          title: Text('Source?'),
+          content: Text('Veuillez choisir une source'),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Caméra'),
+              onPressed: () {
+                context.read<BoolToggle>().getImageCamera('Profil');
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text('Galerie'),
+              onPressed: () {
+                context.read<BoolToggle>().getImageGallery('Profil');
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        )
             : CupertinoAlertDialog(
-                title: Text('Source?'),
-                content: Text('Veuillez choisir une source'),
-                actions: <Widget>[
-                  FlatButton(
-                    child: Text('Caméra'),
-                    onPressed: () {
-                      context.read<BoolToggle>().getImageCamera('Profil');
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  FlatButton(
-                    child: Text('Galerie'),
-                    onPressed: () {
-                      context.read<BoolToggle>().getImageGallery('Profil');
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              ));
+          title: Text('Source?'),
+          content: Text('Veuillez choisir une source'),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Caméra'),
+              onPressed: () {
+                context.read<BoolToggle>().getImageCamera('Profil');
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text('Galerie'),
+              onPressed: () {
+                context.read<BoolToggle>().getImageGallery('Profil');
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ));
   }
 
   void _onFormSubmitted(BuildContext context) {

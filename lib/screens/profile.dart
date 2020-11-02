@@ -1,35 +1,20 @@
 import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vanevents/bloc/navigation_bloc/navigation_bloc.dart';
+import 'package:vanevents/models/myUser.dart';
 import 'package:vanevents/models/ticket.dart';
-import 'package:vanevents/models/user.dart';
-import 'package:vanevents/services/firestore_database.dart';
-import 'package:vanevents/shared/toggle_bool_chat_room.dart';
+import 'package:vanevents/provider/provider.dart';
 
-class Profil extends StatefulWidget with NavigationStates {
-  @override
-  _ProfilState createState() => _ProfilState();
-}
-
-class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
-  Future<List<Ticket>> futureTickets;
-  bool notification = true;
-  FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
-  TabController tabController;
-
-
-
-  @override
-  void initState() {
-    super.initState();
-    tabController = TabController(length: 2,vsync: this);
-  }
+class Profil extends HookWidget with NavigationStates {
+  final FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
 
   void fcmSubscribe() {
     firebaseMessaging.subscribeToTopic('VanEvent');
@@ -37,39 +22,34 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
 
   void fcmUnSubscribe() {
     firebaseMessaging.unsubscribeFromTopic('VanEvent');
-//    ListView.builder(
-//      itemCount: ,
-//        itemBuilder:(context, indext){
-//
-//
-//
-//    });
   }
 
-  void showDialogGenresEtTypes(BuildContext context, List userGenres,List userTypes,int indexStart) {
-    List<Widget> containersAlertDialog =[
-      genreAlertDialog(context),typeAlertDialog(context)
+  void showDialogGenresEtTypes(
+      BuildContext context, List userGenres, List userTypes, int indexStart) {
+    final tabController = useTabController(initialLength: 2);
+    List<Widget> containersAlertDialog = [
+      genreAlertDialog(context),
+      typeAlertDialog(context)
     ];
-    List<Widget> containersCupertino =[
-      genreCupertino(context),typeCupertino(context)
+    List<Widget> containersCupertino = [
+      genreCupertino(context),
+      typeCupertino(context)
     ];
-
-    context.read<BoolToggle>().initGenre();
+    context.read(boolToggleProvider).initGenre();
     for (int i = 0; i < userGenres.length; i++) {
-      if (context.read<BoolToggle>().genre.containsKey(userGenres[i])) {
-        context.read<BoolToggle>().modificationGenre(userGenres[i]);
+      if (context.read(boolToggleProvider).genre.containsKey(userGenres[i])) {
+        context.read(boolToggleProvider).modificationGenre(userGenres[i]);
       }
     }
 
-    context.read<BoolToggle>().initType();
+    context.read(boolToggleProvider).initType();
     for (int i = 0; i < userTypes.length; i++) {
-      if (context.read<BoolToggle>().type.containsKey(userTypes[i])) {
-        context.read<BoolToggle>().modificationType(userTypes[i]);
+      if (context.read(boolToggleProvider).type.containsKey(userTypes[i])) {
+        context.read(boolToggleProvider).modificationType(userTypes[i]);
       }
     }
 
     tabController.animateTo(indexStart);
-
 
     showDialog<void>(
       context: context,
@@ -78,14 +58,14 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
               title: Container(
                 color: Theme.of(context).colorScheme.primary,
                 child: TabBar(
-                    tabs: <Widget>[
-                  Tab(
-                    text: 'Genres',
-                  ),
-                  Tab(
-                    text: 'Types',
-                  )
-                ],
+                  tabs: <Widget>[
+                    Tab(
+                      text: 'Genres',
+                    ),
+                    Tab(
+                      text: 'Types',
+                    )
+                  ],
                   controller: tabController,
                 ),
               ),
@@ -93,8 +73,7 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
                 height: 450,
                 width: double.maxFinite,
                 child: TabBarView(
-                  controller: tabController,
-                    children: containersAlertDialog),
+                    controller: tabController, children: containersAlertDialog),
               ),
               actions: <Widget>[
                 FlatButton(
@@ -106,13 +85,13 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
                 FlatButton(
                   child: Text('Ok'),
                   onPressed: () {
-                    context
-                        .read<FirestoreDatabase>()
-                        .updateUserGenre(context.read<BoolToggle>().genre);
-                    context
-                        .read<FirestoreDatabase>()
-                        .updateUserType(context.read<BoolToggle>().type);
+                    context.read(firestoreDatabaseProvider).updateMyUserGenre(
+                        context.read(boolToggleProvider).genre);
+                    context.read(firestoreDatabaseProvider).updateMyUserType(
+                        context.read(boolToggleProvider).type);
                     Navigator.of(context).pop();
+
+                    // context.read<FirestoreDatabase>().updateUserLieu(context.read(boolToggleProvider).)
                   },
                 ),
               ],
@@ -121,22 +100,21 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
               title: Container(
                 color: Theme.of(context).colorScheme.primary,
                 child: TabBar(
-                    tabs: <Widget>[
-                      Tab(
-                        text: 'Genres',
-                      ),
-                      Tab(
-                        text: 'Types',
-                      )
-                    ],
+                  tabs: <Widget>[
+                    Tab(
+                      text: 'Genres',
+                    ),
+                    Tab(
+                      text: 'Types',
+                    )
+                  ],
                   controller: tabController,
                 ),
               ),
               content: SizedBox(
                 height: 450,
                 child: TabBarView(
-                    controller: tabController,
-                    children: containersCupertino),
+                    controller: tabController, children: containersCupertino),
               ),
               actions: <Widget>[
                 FlatButton(
@@ -148,12 +126,10 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
                 FlatButton(
                   child: Text('Ok'),
                   onPressed: () {
-                    context
-                        .read<FirestoreDatabase>()
-                        .updateUserGenre(context.read<BoolToggle>().genre);
-                    context
-                        .read<FirestoreDatabase>()
-                        .updateUserType(context.read<BoolToggle>().type);
+                    context.read(firestoreDatabaseProvider).updateMyUserGenre(
+                        context.read(boolToggleProvider).genre);
+                    context.read(firestoreDatabaseProvider).updateMyUserType(
+                        context.read(boolToggleProvider).type);
                     Navigator.of(context).pop();
                   },
                 ),
@@ -164,110 +140,91 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
 
   SizedBox genreAlertDialog(BuildContext context) {
     return SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
-                  itemCount:
-                  Provider.of<BoolToggle>(context, listen: false).genre.keys.length,
-                  itemBuilder: (context, index) {
-                    List<String> str =
-                        context.read<BoolToggle>().genre.keys.toList();
+      width: double.maxFinite,
+      child: ListView.builder(
+          itemCount: context.read(boolToggleProvider).genre.keys.length,
+          itemBuilder: (context, index) {
+            List<String> str =
+                context.read(boolToggleProvider).genre.keys.toList();
 
-                    return Consumer<BoolToggle>(
-                      builder: (BuildContext context, BoolToggle boolToggle,
-                          Widget child) {
-                        return CheckboxListTile(
-                          onChanged: (bool val) =>
-                              boolToggle.modificationGenre(str[index]),
-                          value:
-                              context.watch<BoolToggle>().genre[str[index]],
-                          activeColor: Theme.of(context).colorScheme.primary,
-                          title: Text(str[index]),
-                        );
-                      },
-                    );
-                  }),
+            return CheckboxListTile(
+              onChanged: (bool val) => context
+                  .read(boolToggleProvider)
+                  .modificationGenre(str[index]),
+              value: useProvider(boolToggleProvider).genre[str[index]],
+              activeColor: Theme.of(context).colorScheme.primary,
+              title: Text(str[index]),
             );
+          }),
+    );
   }
 
   Widget genreCupertino(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
-                children: Provider.of<BoolToggle>(context, listen: false)
-                    .genre
-                    .keys
-                    .map((e) => Consumer<BoolToggle>(
-                  builder: (BuildContext context, BoolToggle boolToggle,
-                      Widget child) {
-                    return CheckboxListTile(
-                      onChanged: (bool val) =>
-                          boolToggle.modificationGenre(e),
-                      value: context.watch<BoolToggle>().genre[e],
-                      activeColor:
-                      Theme.of(context).colorScheme.primary,
-                      title: Text(e),
-                    );
-                  },
+        children: context
+            .read(boolToggleProvider)
+            .genre
+            .keys
+            .map((e) => CheckboxListTile(
+                  onChanged: (bool val) =>
+                      context.read(boolToggleProvider).modificationGenre(e),
+                  value: useProvider(boolToggleProvider).genre[e],
+                  activeColor: Theme.of(context).colorScheme.primary,
+                  title: Text(e),
                 ))
-                    .toList(),
-              ),
+            .toList(),
+      ),
     );
   }
 
   Widget typeCupertino(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
-                children: Provider.of<BoolToggle>(context, listen: false)
-                    .type
-                    .keys
-                    .map((e) => Consumer<BoolToggle>(
-                  builder: (BuildContext context, BoolToggle boolToggle,
-                      Widget child) {
-                    return CheckboxListTile(
-                      onChanged: (bool val) =>
-                          boolToggle.modificationType(e),
-                      value: context.watch<BoolToggle>().type[e],
-                      activeColor: Theme.of(context).colorScheme.primary,
-                      title: Text(e),
-                    );
-                  },
+        children: context
+            .read(boolToggleProvider)
+            .type
+            .keys
+            .map((e) => CheckboxListTile(
+                  onChanged: (bool val) =>
+                      context.read(boolToggleProvider).modificationType(e),
+                  value: useProvider(boolToggleProvider).type[e],
+                  activeColor: Theme.of(context).colorScheme.primary,
+                  title: Text(e),
                 ))
-                    .toList(),
-              ),
+            .toList(),
+      ),
     );
   }
 
   SizedBox typeAlertDialog(BuildContext context) {
     return SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
-                  itemCount:
-                  Provider.of<BoolToggle>(context, listen: false).type.keys.length,
-                  itemBuilder: (context, index) {
-                    List<String> str =
-                        context.read<BoolToggle>().type.keys.toList();
+      width: double.maxFinite,
+      child: ListView.builder(
+          itemCount: context.read(boolToggleProvider).type.keys.length,
+          itemBuilder: (context, index) {
+            List<String> str =
+                context.read(boolToggleProvider).type.keys.toList();
 
-                    return Consumer<BoolToggle>(
-                      builder: (BuildContext context, BoolToggle boolToggle,
-                          Widget child) {
-                        return CheckboxListTile(
-                          onChanged: (bool val) =>
-                              boolToggle.modificationType(str[index]),
-                          value: context.watch<BoolToggle>().type[str[index]],
-                          activeColor: Theme.of(context).colorScheme.primary,
-                          title: Text(str[index]),
-                        );
-                      },
-                    );
-                  }),
+            return CheckboxListTile(
+              onChanged: (bool val) =>
+                  context.read(boolToggleProvider).modificationType(str[index]),
+              value: useProvider(boolToggleProvider).type[str[index]],
+              activeColor: Theme.of(context).colorScheme.primary,
+              title: Text(str[index]),
             );
+          }),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<User>(context, listen: false);
+    final notification = useProvider(notificationProvider);
 
-    final db = Provider.of<FirestoreDatabase>(context, listen: false);
-    futureTickets = db.futureTicketParticipation();
+    final MyUser user = useProvider(myUserProvider);
+
+    final db = useProvider(firestoreDatabaseProvider);
+
     return Padding(
       padding: const EdgeInsets.only(top: 40),
       child: Column(
@@ -275,16 +232,14 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
         children: <Widget>[
           Center(
             child: Text(
-              user.nom,
+              user.nom ?? 'Anonymous',
               style: Theme.of(context).textTheme.subtitle2,
             ),
           ),
           SizedBox(
             height: 20,
           ),
-          Divider(
-
-          ),
+          Divider(),
           SizedBox(
             height: 20,
           ),
@@ -296,7 +251,7 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
             ),
           ),
           FutureBuilder(
-            future: futureTickets,
+            future: db.futureTicketParticipation(),
             builder: (context, async) {
               if (async.hasError) {
                 print(async.error);
@@ -306,8 +261,7 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
                     style: Theme.of(context).textTheme.subtitle2,
                   ),
                 );
-              } else if (async.connectionState ==
-                  ConnectionState.waiting) {
+              } else if (async.connectionState == ConnectionState.waiting) {
                 return Center(
                   child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
@@ -329,57 +283,51 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
 
               return tickets.isNotEmpty
                   ? SizedBox(
-                height: 100,
-                child: ListView.separated(
-                  separatorBuilder: (context, index) =>
-                      SizedBox(
-                        width: 12,
-                      ),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: tickets.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: CachedNetworkImage(
-                        imageUrl: tickets[index].imageUrl,
-                        imageBuilder:
-                            (context, imageProvider) =>
-                            Container(
-                              height: 84,
-                              width: 84,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.all(
-                                    Radius.circular(84)),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                  fit: BoxFit.cover,
+                      height: 100,
+                      child: ListView.separated(
+                        separatorBuilder: (context, index) => SizedBox(
+                          width: 12,
+                        ),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: tickets.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: CachedNetworkImage(
+                              imageUrl: tickets[index].imageUrl,
+                              imageBuilder: (context, imageProvider) =>
+                                  Container(
+                                height: 84,
+                                width: 84,
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(84)),
+                                  image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
-                            ),
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            Shimmer.fromColors(
-                              baseColor: Colors.white,
-                              highlightColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary,
-                              child: CircleAvatar(
-                                radius: 42,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.white,
+                                highlightColor:
+                                    Theme.of(context).colorScheme.primary,
+                                child: CircleAvatar(
+                                  radius: 42,
+                                ),
                               ),
+                              errorWidget: (context, url, error) =>
+                                  Icon(Icons.error),
                             ),
-                        errorWidget: (context, url, error) =>
-                            Icon(Icons.error),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-              )
+                    )
                   : SizedBox();
             },
           ),
-          Divider(
-
-          ),
+          Divider(),
           ListTile(
             leading: Text(
               'Genres:',
@@ -389,36 +337,36 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
                 icon: Icon(FontAwesomeIcons.pencilAlt),
                 onPressed: () => showDialogGenresEtTypes(
                     context,
-                    context.read<User>().genres != null
-                        ? context.read<User>().genres.toList()
-                        : [],context.read<User>().types != null
-                    ? context.read<User>().types.toList()
-                    : [],0)
-            ),
+                    context.read(myUserProvider).genres != null
+                        ? context.read(myUserProvider).genres.toList()
+                        : [],
+                    context.read(myUserProvider).types != null
+                        ? context.read(myUserProvider).types.toList()
+                        : [],
+                    0)),
           ),
-          Provider.of<User>(context).genres != null
+          context.read(myUserProvider).genres != null
               ? Column(
-            children: Provider.of<User>(context)
-                .genres
-                .map((e) => ListTile(
-              title: Text(
-                e,
-                style: Theme.of(context)
-                    .textTheme
-                    .button
-                    .copyWith(color: Colors.black),
-              ),
-              trailing: IconButton(
-                onPressed: null,
-                icon: Icon(FontAwesomeIcons.solidHeart),
-              ),
-            ))
-                .toList(),
-          )
+                  children: context
+                      .read(myUserProvider)
+                      .genres
+                      .map((e) => ListTile(
+                            title: Text(
+                              e ?? '',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .button
+                                  .copyWith(color: Colors.black),
+                            ),
+                            trailing: IconButton(
+                              onPressed: null,
+                              icon: Icon(FontAwesomeIcons.solidHeart),
+                            ),
+                          ))
+                      .toList(),
+                )
               : SizedBox(),
-          Divider(
-
-          ),
+          Divider(),
           ListTile(
             leading: Text(
               'Types:',
@@ -428,87 +376,83 @@ class _ProfilState extends State<Profil> with SingleTickerProviderStateMixin{
                 icon: Icon(FontAwesomeIcons.pencilAlt),
                 onPressed: () => showDialogGenresEtTypes(
                     context,
-                    context.read<User>().genres != null
-                        ? context.read<User>().genres.toList()
-                        : [],context.read<User>().types != null
-                    ? context.read<User>().types.toList()
-                    : [],1)
-            ),
+                    context.read(myUserProvider).genres != null
+                        ? context.read(myUserProvider).genres.toList()
+                        : [],
+                    context.read(myUserProvider).types != null
+                        ? context.read(myUserProvider).types.toList()
+                        : [],
+                    1)),
           ),
-          Provider.of<User>(context).types != null
+          context.read(myUserProvider).types != null
               ? Column(
-            children: Provider.of<User>(context)
-                .types
-                .map((e) => ListTile(
-              title: Text(
-                e,
-                style: Theme.of(context)
-                    .textTheme
-                    .button
-                    .copyWith(color: Colors.black),
-              ),
-              trailing: IconButton(
-                onPressed: null,
-                icon: Icon(FontAwesomeIcons.solidHeart),
-              ),
-            ))
-                .toList(),
-          )
+                  children: context
+                      .read(myUserProvider)
+                      .types
+                      .map((e) => ListTile(
+                            title: Text(
+                              e ?? '',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .button
+                                  .copyWith(color: Colors.black),
+                            ),
+                            trailing: IconButton(
+                              onPressed: null,
+                              icon: Icon(FontAwesomeIcons.solidHeart),
+                            ),
+                          ))
+                      .toList(),
+                )
               : SizedBox(),
-          Divider(
-
-          ),
+          Divider(),
           ListTile(
             leading: Icon(FontAwesomeIcons.envelope,
                 color: Theme.of(context).colorScheme.onBackground),
             title: Text(
-              user.email,
+              user.email ?? 'Anonymous@van-Event.fr',
               style: Theme.of(context).textTheme.subtitle2,
             ),
           ),
-          Consumer<BoolToggle>(builder: (context, boolToggle, child) {
-            return boolToggle.isEnableNotification
-                ? SwitchListTile(
-              title: Text(
-                'Notifications',
-                style: Theme.of(context).textTheme.subtitle2,
-              ),
-              value: true,
-              onChanged: (b) {
-                context
-                    .read<BoolToggle>()
-                    .setIsEnableNotification(b);
+          notification.when(
+              data: (val) {
+                return SwitchListTile(
+                  title: Text(
+                    'Notifications',
+                    style: Theme.of(context).textTheme.button,
+                  ),
+                  value: val,
+                  onChanged: (b) {
+                    context.read(boolToggleProvider).setIsEnableNotification(b);
 
-                if (b) {
-                  fcmSubscribe();
-                } else {
-                  fcmUnSubscribe();
-                }
+                    if (b) {
+                      fcmSubscribe();
+                    } else {
+                      fcmUnSubscribe();
+                    }
+                  },
+                  activeColor: Theme.of(context).colorScheme.secondary,
+                );
               },
-              activeColor:
-              Theme.of(context).colorScheme.primary,
-            )
-                : SwitchListTile(
-              title: Text(
-                'Notifications',
-                style: Theme.of(context).textTheme.button,
-              ),
-              value: false,
-              onChanged: (b) {
-                context
-                    .read<BoolToggle>()
-                    .setIsEnableNotification(b);
+              loading: null,
+              error: null),
+          SwitchListTile(
+            title: Text(
+              'Notifications',
+              style: Theme.of(context).textTheme.subtitle2,
+            ),
+            value: useProvider(boolToggleProvider).isEnableNotification,
+            onChanged: (b) {
+              context.read(boolToggleProvider).setIsEnableNotification(b);
 
-                if (b) {
-                  fcmSubscribe();
-                } else {
-                  fcmUnSubscribe();
-                }
-              },
-              activeColor:
-              Theme.of(context).colorScheme.secondary,
-            );
-          })
+              if (b) {
+                fcmSubscribe();
+              } else {
+                fcmUnSubscribe();
+              }
+            },
+            activeColor: Theme.of(context).colorScheme.primary,
+          ),
         ],
       ),
     );

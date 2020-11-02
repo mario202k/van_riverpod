@@ -1,13 +1,13 @@
+import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screen/screen.dart';
 import 'package:vanevents/models/ticket.dart';
 import 'package:vanevents/services/firestore_database.dart';
-import 'package:flare_flutter/flare_actor.dart';
 
 class QrCode extends StatefulWidget {
-  String data;
+  final String data;
 
   QrCode(this.data);
 
@@ -15,7 +15,7 @@ class QrCode extends StatefulWidget {
   _QrCodeState createState() => _QrCodeState();
 }
 
-class _QrCodeState extends State<QrCode>{
+class _QrCodeState extends State<QrCode> {
   double brightness;
   Stream<Ticket> streamTicket;
   bool isValidated = false;
@@ -86,15 +86,14 @@ class _QrCodeState extends State<QrCode>{
 
                   if (ticket.status == 'Validé' && !isValidated) {
                     isValidated = true;
-                  }else if(ticket.status == 'Annulé' &&!isCancel){
+                  } else if (ticket.status == 'Annulé' && !isCancel) {
                     isCancel = true;
                   }
-
 
                   return Stack(
                     children: <Widget>[
                       Align(
-                        alignment:Alignment.center,
+                        alignment: Alignment.center,
                         child: QrImage(
                           data: widget.data,
                           version: QrVersions.auto,
@@ -102,18 +101,14 @@ class _QrCodeState extends State<QrCode>{
                           gapless: false,
                         ),
                       ),
-                      isValidated
-                          ? FlareActor(
-                              'assets/animations/ok.flr',
-                              alignment: Alignment.center,
-                              animation: 'Checkmark Appear',
-                          )
-                          : isCancel?  FlareActor(
-                        'assets/animations/Nope.flr',
-                        alignment: Alignment.center,
-                        animation: 'Nope appear',
-                      ) : SizedBox(),
-
+                      Visibility(
+                        visible: isValidated,
+                        child: FlareActor(
+                          'assets/animations/ok.flr',
+                          alignment: Alignment.center,
+                          animation: 'Checkmark Appear',
+                        ),
+                      )
                     ],
                   );
                 }),
@@ -122,6 +117,4 @@ class _QrCodeState extends State<QrCode>{
       ),
     );
   }
-
-
 }

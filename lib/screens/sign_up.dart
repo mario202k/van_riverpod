@@ -52,10 +52,7 @@ class _SignUpState extends State<SignUp> {
           appBar: PreferredSize(
             preferredSize: Size(double.infinity, 100),
             child: TopAppBar(
-                'SignUp',
-                false,
-
-                double.infinity),
+                'SignUp'),
           ),
           backgroundColor: Theme.of(context).colorScheme.background,
           body: Container(
@@ -99,10 +96,10 @@ class _SignUpState extends State<SignUp> {
                           curve: Curves.easeInOut,
                           height: startAnimation ? _heightContainer : 0,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [
-                              Theme.of(context).colorScheme.primary,
-                              Theme.of(context).colorScheme.secondary
-                            ]),
+                            // gradient: LinearGradient(colors: [
+                            //   Theme.of(context).colorScheme.primary,
+                            //   Theme.of(context).colorScheme.secondary
+                            // ]),
                           ),
                         ),
                       ),

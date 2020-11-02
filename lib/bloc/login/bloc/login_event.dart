@@ -10,6 +10,8 @@ abstract class LoginEvent extends Equatable {
 
 class LoginWithGooglePressed extends LoginEvent {}
 
+class LoginWithAnonymous extends LoginEvent {}
+
 class LoginWithCredentialsPressed extends LoginEvent {
   final String email;
   final String password;

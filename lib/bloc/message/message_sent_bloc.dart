@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vanevents/models/message.dart';
 
 class MessageSentBloc extends Bloc<MessageSentEvent,MessageSentStates>{
+  MessageSentBloc(MessageSentStates initialState) : super(initialState);
+
   @override
   MessageSentStates get initialState => MessageSentStates.onLoading();
 
@@ -12,14 +14,14 @@ class MessageSentBloc extends Bloc<MessageSentEvent,MessageSentStates>{
     if(event.onLoading){
       yield MessageSentStates.onLoading();
     }else if(event.onServer){
-      MyMessage myMessage = await Firestore.instance
+      MyMessage myMessage = await FirebaseFirestore.instance
           .collection('chats')
-          .document(event.chatId)
+          .doc(event.chatId)
           .collection('messages')
           .orderBy('date', descending: true)
           .limit(1)
-          .getDocuments()
-          .then((doc) => doc.documents.map((doc) => MyMessage.fromMap(doc.data)).first);
+          .get()
+          .then((doc) => doc.docs.map((doc) => MyMessage.fromMap(doc.data())).first);
       yield MessageSentStates.onServer(myMessage);
     }else if(event.onReceived){
       yield MessageSentStates.onReceived();

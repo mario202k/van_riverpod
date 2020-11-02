@@ -17,6 +17,7 @@ import Firebase
 
 
     FirebaseApp.configure()
+    GMSServices.provideAPIKey("AIzaSyClHw8X6FeoD_lRPSZtVUVRuipQTJzEobo")
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

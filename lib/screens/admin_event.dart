@@ -7,6 +7,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:vanevents/models/event.dart';
+import 'package:vanevents/models/myUser.dart';
 import 'package:vanevents/routing/route.gr.dart';
 import 'package:vanevents/screens/model_screen.dart';
 import 'package:vanevents/services/firestore_database.dart';
@@ -25,12 +26,16 @@ class _AdminEventsState extends State<AdminEvents> {
     final rep = RepositoryProvider.of<FirestoreDatabase>(context);
     print(rep.uid);
     final db = Provider.of<FirestoreDatabase>(context, listen: false);
-    streamEvents = db.allEventsAdminStream();
+
+    streamEvents = db.allEventsAdminStream(
+        Provider.of<MyUser>(context, listen: false).stripeAccount);
 
     return ModelScreen(
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
-        appBar: AppBar(title: Text('Admin'),),
+        appBar: AppBar(
+          title: Text('Admin'),
+        ),
         body: StreamBuilder<List<MyEvent>>(
             stream: streamEvents,
             builder: (context, snapshot) {
@@ -65,79 +70,48 @@ class _AdminEventsState extends State<AdminEvents> {
                               color: Theme.of(context).colorScheme.secondary,
                               icon: FontAwesomeIcons.calendarTimes,
                               onTap: () {
-                                showDialog(
-                                    context: context,
-                                    builder: (_) => Platform.isAndroid
-                                        ? AlertDialog(
-                                            title: Text('Annuler?'),
-                                            content: Text(
-                                                'Etes vous sur de vouloir annuler l\'events'),
-                                            actions: <Widget>[
-                                              FlatButton(
-                                                child: Text('Non'),
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                              ),
-                                              FlatButton(
-                                                child: Text('Oui'),
-                                                onPressed: () {
-                                                  db.cancelEvent(events.elementAt(index).id);
-                                                },
-                                              ),
-                                            ],
-                                          )
-                                        : CupertinoAlertDialog(
-                                            title: Text('Annuler?'),
-                                            content: Text(
-                                                'Etes vous sur de vouloir annuler l\'events'),
-                                            actions: <Widget>[
-                                              FlatButton(
-                                                child: Text('Non'),
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                              ),
-                                              FlatButton(
-                                                child: Text('Oui'),
-                                                onPressed: () {
-                                                  db.cancelEvent(events.elementAt(index).id);
-                                                },
-                                              ),
-                                            ],
-                                          ));
+                                showAreYouSure(context, db, index);
                               },
                             ),
                           ],
                           secondaryActions: <Widget>[
                             IconSlideAction(
                               caption: 'Update',
-                              color: Theme.of(context).colorScheme.primaryVariant,
+                              color:
+                                  Theme.of(context).colorScheme.primaryVariant,
                               icon: FontAwesomeIcons.search,
-                              onTap: () => ExtendedNavigator.of(context)
-                                  .pushNamed(Routes.uploadEvent,
-                                      arguments: UploadEventArguments(
-                                          myEvent: events.elementAt(index))),
+                              onTap: () => ExtendedNavigator.of(context).push(
+                                  Routes.uploadEvent,
+                                  arguments: UploadEventArguments(
+                                      myEvent: events.elementAt(index))),
                             )
                           ],
                           child: ListTile(
                             leading: Text(
                               events.elementAt(index).titre,
-                              style: Theme.of(context).textTheme.button.copyWith(
-                                color: Theme.of(context).colorScheme.onBackground
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .button
+                                  .copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onBackground),
                             ),
                             title: Text(
                               events.elementAt(index).status,
-                              style: Theme.of(context).textTheme.button.copyWith(
-                                  color: Theme.of(context).colorScheme.onBackground
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .button
+                                  .copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onBackground),
                             ),
                             trailing: Icon(
                               FontAwesomeIcons.qrcode,
                               color: Theme.of(context).colorScheme.onBackground,
                             ),
-                            onTap: () => ExtendedNavigator.of(context).pushNamed(
+                            onTap: () => ExtendedNavigator.of(context).push(
                                 Routes.monitoringScanner,
                                 arguments: MonitoringScannerArguments(
                                     eventId: events.elementAt(index).id)),
@@ -163,9 +137,57 @@ class _AdminEventsState extends State<AdminEvents> {
             color: Theme.of(context).colorScheme.onSecondary,
           ),
           onPressed: () =>
-              ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+              ExtendedNavigator.of(context).push(Routes.uploadEvent),
         ),
       ),
     );
+  }
+
+  void showAreYouSure(BuildContext context, FirestoreDatabase db, int index) {
+     showDialog(
+        context: context,
+        builder: (_) => Platform.isAndroid
+            ? AlertDialog(
+                title: Text('Annuler?'),
+                content: Text(
+                    'Etes vous sur de vouloir annuler l\'events'),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('Non'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: Text('Oui'),
+                    onPressed: () {
+                      db.cancelEvent(events
+                          .elementAt(index)
+                          .id);
+                    },
+                  ),
+                ],
+              )
+            : CupertinoAlertDialog(
+                title: Text('Annuler?'),
+                content: Text(
+                    'Etes vous sur de vouloir annuler l\'events'),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('Non'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: Text('Oui'),
+                    onPressed: () {
+                      db.cancelEvent(events
+                          .elementAt(index)
+                          .id);
+                    },
+                  ),
+                ],
+              ));
   }
 }

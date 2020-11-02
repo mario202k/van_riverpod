@@ -21,7 +21,7 @@ class NotificationHandler {
   bool _isShowingWindow = false;
   bool _isUpdatedWindow = false;
 
-  Firestore db = Firestore.instance;
+  FirebaseFirestore db = FirebaseFirestore.instance;
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
@@ -300,7 +300,7 @@ class NotificationHandler {
         defaultPresentSound: true,
         onDidReceiveLocalNotification: onDidReceiveLocalNotification);
     var initializationSettings = new InitializationSettings(
-        initializationSettingsAndroid, initializationSettingsIOS);
+        android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
 
     flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onSelectNotification: onSelectNotification);
@@ -325,7 +325,7 @@ class NotificationHandler {
           Platform.isAndroid ? myBackgroundMessageHandler : null,
       onMessage: (Map<String, dynamic> message) async {
         print("onMessage: $message");
-        showNotification(message);
+
         MyMessage myMessage;
         String chatId = '';
         if (Platform.isAndroid) {
@@ -337,7 +337,8 @@ class NotificationHandler {
           chatId = message['chatId'];
         }
 
-        if (myMessage.type <= 2) {
+        if (myMessage.idFrom != uid && myMessage.type <= 2) {
+          showNotification(message);
           BlocProvider.of<MessageBloc>(context).add(
               MessageEvents(chatId, false, true, false, message: myMessage));
         } else {}
@@ -351,11 +352,17 @@ class NotificationHandler {
           chatId = message['chatId'];
         }
 
-        ExtendedNavigator.ofRouter<Router>().pushNamedAndRemoveUntil(
+        ExtendedNavigator.of(context).pushAndRemoveUntil(
           Routes.chatRoom,
           ModalRoute.withName(Routes.authentication),
           arguments: ChatRoomArguments(chatId: chatId),
         );
+
+//        ExtendedNavigator.ofRouter<Router>().pushNamedAndRemoveUntil(
+//          Routes.chatRoom,
+//          ModalRoute.withName(Routes.authentication),
+//          arguments: ChatRoomArguments(chatId: chatId),
+//        );
       },
       onResume: (Map<String, dynamic> message) async {
         print("onResume: $message");
@@ -368,9 +375,7 @@ class NotificationHandler {
 
 //        Navigator.popUntil(context, ModalRoute.withName(Routes.authWidget));
 
-
-
-        ExtendedNavigator.ofRouter<Router>().pushNamedAndRemoveUntil(
+        ExtendedNavigator.of(context).pushAndRemoveUntil(
           Routes.chatRoom,
           ModalRoute.withName(Routes.authentication),
           arguments: ChatRoomArguments(chatId: chatId),
@@ -384,13 +389,16 @@ class NotificationHandler {
   }
 
   void showNotification(Map<String, dynamic> message) async {
-
     String title, type, body, chatId;
 
     if (Platform.isIOS) {
-      title = message['aps'] != null?message['aps']['alert']['title']:message['notification']['title'];
+      title = message['aps'] != null
+          ? message['aps']['alert']['title']
+          : message['notification']['title'];
       type = message['type'];
-      body = message['aps'] != null?message['aps']['alert']['body']:message['notification']['body'];
+      body = message['aps'] != null
+          ? message['aps']['alert']['body']
+          : message['notification']['body'];
       chatId = message['chatId'];
     } else {
       title = message['notification']['title'];
@@ -405,8 +413,8 @@ class NotificationHandler {
         'your channel description',
         playSound: true,
         enableVibration: true,
-        importance: Importance.Max,
-        priority: Priority.High,
+        importance: Importance.max,
+        priority: Priority.high,
         ticker: 'ticker');
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(
         badgeNumber: 3,
@@ -414,7 +422,8 @@ class NotificationHandler {
         presentBadge: true,
         presentSound: true);
     var platformChannelSpecifics = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.show(
         0, title, type == '0' ? body : 'image', platformChannelSpecifics,
@@ -426,31 +435,31 @@ class NotificationHandler {
       print(token);
       await db //supprimer s'il en reste
           .collection('users')
-          .document(uid)
+          .doc(uid)
           .collection('tokens')
-          .getDocuments()
+          .get()
           .then((docs) async {
-        if (docs.documents.isNotEmpty) {
-          docs.documents.forEach((doc) async {
+        if (docs.docs.isNotEmpty) {
+          docs.docs.forEach((doc) async {
             await db
                 .collection('users')
-                .document(uid)
+                .doc(uid)
                 .collection('tokens')
-                .document(doc.documentID)
+                .doc(doc.id)
                 .delete();
           });
         }
 
         await db
             .collection('users')
-            .document(uid)
+            .doc(uid)
             .collection('tokens')
-            .document(token)
-            .setData({
+            .doc(token)
+            .set({
           'token': token,
           'createAt': FieldValue.serverTimestamp(),
           'platform': Platform.operatingSystem,
-        }, merge: true);
+        }, SetOptions(merge: true));
       });
     }).catchError((err) {
       print(err);
@@ -527,7 +536,7 @@ class NotificationHandler {
 
     //await flutterLocalNotificationsPlugin.cancelAll();
 
-    ExtendedNavigator.ofRouter<Router>().pushNamedAndRemoveUntil(
+    ExtendedNavigator.of(context).pushAndRemoveUntil(
       Routes.chatRoom,
       ModalRoute.withName(Routes.authentication),
       arguments: ChatRoomArguments(chatId: chatId),

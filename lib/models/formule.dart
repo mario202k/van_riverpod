@@ -21,6 +21,11 @@ class Formule {
         id: documentId,
         title: data['title'] ?? '',
         prix: data['prix'] ?? '',
-        nombreDePersonne: data['nombreDePersonne'] ?? 0);
+        nombreDePersonne: data['nb'] ?? 0);
+  }
+
+  @override
+  String toString() {
+    return 'Formule{id: $id, title: $title, prix: $prix, nombreDePersonne: $nombreDePersonne}';
   }
 }

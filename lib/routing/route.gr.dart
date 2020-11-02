@@ -4,47 +4,61 @@
 // AutoRouteGenerator
 // **************************************************************************
 
-import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:auto_route/auto_route.dart';
-import 'package:vanevents/authentication.dart';
-import 'package:vanevents/screens/login.dart';
-import 'package:vanevents/screens/reset_password.dart';
-import 'package:vanevents/screens/sign_up.dart';
-import 'package:vanevents/screens/base_screen.dart';
-import 'package:vanevents/screens/chat_room.dart';
-import 'package:vanevents/screens/full_photo.dart';
+// ignore_for_file: public_member_api_docs
 import 'dart:io';
-import 'package:vanevents/screens/upload_event.dart';
-import 'package:vanevents/models/event.dart';
-import 'package:vanevents/screens/details.dart';
-import 'package:vanevents/screens/formula_choice.dart';
-import 'package:vanevents/models/formule.dart';
-import 'package:vanevents/screens/qr_code.dart';
-import 'package:vanevents/screens/monitoring_scanner.dart';
-import 'package:vanevents/screens/admin_event.dart';
-import 'package:vanevents/screens/splash_screen.dart';
-import 'package:vanevents/screens/walkthrough.dart';
 
-abstract class Routes {
-  static const authentication = '/';
-  static const login = '/login';
-  static const resetPassword = '/reset-password';
-  static const signUp = '/sign-up';
-  static const baseScreens = '/base-screens';
-  static const chatRoom = '/chat-room';
-  static const fullPhoto = '/full-photo';
-  static const uploadEvent = '/upload-event';
-  static const details = '/details';
-  static const formulaChoice = '/formula-choice';
-  static const qrCode = '/qr-code';
-  static const monitoringScanner = '/monitoring-scanner';
-  static const adminEvents = '/admin-events';
-  static const splashScreen = '/splash-screen';
-  static const walkthrough = '/walkthrough';
-  static const all = {
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../authentication.dart';
+import '../bloc/stripe_profile/screen_stripe_profile.dart';
+import '../models/event.dart';
+import '../models/formule.dart';
+import '../models/my_transport.dart';
+import '../screens/admin_event.dart';
+import '../screens/admin_organisateur.dart';
+import '../screens/base_screen.dart';
+import '../screens/cgu_cgv_accept.dart';
+import '../screens/chat_room.dart';
+import '../screens/details.dart';
+import '../screens/formula_choice.dart';
+import '../screens/full_photo.dart';
+import '../screens/login.dart';
+import '../screens/monitoring_scanner.dart';
+import '../screens/qr_code.dart';
+import '../screens/reset_password.dart';
+import '../screens/sign_up.dart';
+import '../screens/splash_screen.dart';
+import '../screens/transport.dart';
+import '../screens/transport_details.dart';
+import '../screens/upload_event.dart';
+import '../screens/walkthrough.dart';
+
+class Routes {
+  static const String authentication = '/';
+  static const String loginForm = '/login-form';
+  static const String resetPassword = '/reset-password';
+  static const String signUp = '/sign-up';
+  static const String baseScreens = '/base-screens';
+  static const String chatRoom = '/chat-room';
+  static const String fullPhoto = '/full-photo';
+  static const String uploadEvent = '/upload-event';
+  static const String details = '/Details';
+  static const String formulaChoice = '/formula-choice';
+  static const String qrCode = '/qr-code';
+  static const String monitoringScanner = '/monitoring-scanner';
+  static const String adminEvents = '/admin-events';
+  static const String adminOrganisateurs = '/admin-organisateurs';
+  static const String mySplashScreen = '/my-splash-screen';
+  static const String walkthrough = '/Walkthrough';
+  static const String cguCgvAccept = '/cgu-cgv-accept';
+  static const String stripeProfile = '/stripe-profile';
+  static const String transport = '/Transport';
+  static const String transportDetail = '/transport-detail';
+  static const all = <String>{
     authentication,
-    login,
+    loginForm,
     resetPassword,
     signUp,
     baseScreens,
@@ -56,178 +70,222 @@ abstract class Routes {
     qrCode,
     monitoringScanner,
     adminEvents,
-    splashScreen,
+    adminOrganisateurs,
+    mySplashScreen,
     walkthrough,
+    cguCgvAccept,
+    stripeProfile,
+    transport,
+    transportDetail,
   };
 }
 
 class Router extends RouterBase {
   @override
-  Set<String> get allRoutes => Routes.all;
-
-  @Deprecated('call ExtendedNavigator.ofRouter<Router>() directly')
-  static ExtendedNavigatorState get navigator =>
-      ExtendedNavigator.ofRouter<Router>();
-
+  List<RouteDef> get routes => _routes;
+  final _routes = <RouteDef>[
+    RouteDef(Routes.authentication, page: Authentication),
+    RouteDef(Routes.loginForm, page: LoginForm),
+    RouteDef(Routes.resetPassword, page: ResetPassword),
+    RouteDef(Routes.signUp, page: SignUp),
+    RouteDef(Routes.baseScreens, page: BaseScreens),
+    RouteDef(Routes.chatRoom, page: ChatRoom),
+    RouteDef(Routes.fullPhoto, page: FullPhoto),
+    RouteDef(Routes.uploadEvent, page: UploadEvent),
+    RouteDef(Routes.details, page: Details),
+    RouteDef(Routes.formulaChoice, page: FormulaChoice),
+    RouteDef(Routes.qrCode, page: QrCode),
+    RouteDef(Routes.monitoringScanner, page: MonitoringScanner),
+    RouteDef(Routes.adminEvents, page: AdminEvents),
+    RouteDef(Routes.adminOrganisateurs, page: AdminOrganisateurs),
+    RouteDef(Routes.mySplashScreen, page: MySplashScreen),
+    RouteDef(Routes.walkthrough, page: Walkthrough),
+    RouteDef(Routes.cguCgvAccept, page: CguCgvAccept),
+    RouteDef(Routes.stripeProfile, page: StripeProfile),
+    RouteDef(Routes.transport, page: Transport),
+    RouteDef(Routes.transportDetail, page: TransportDetail),
+  ];
   @override
-  Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    final args = settings.arguments;
-    switch (settings.name) {
-      case Routes.authentication:
-        return MaterialPageRoute<dynamic>(
-          builder: (context) => Authentication(),
-          settings: settings,
-        );
-      case Routes.login:
-        return MaterialPageRoute<dynamic>(
-          builder: (context) => LoginForm(),
-          settings: settings,
-        );
-      case Routes.resetPassword:
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              ResetPassword(),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.signUp:
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) => SignUp(),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.baseScreens:
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              BaseScreens(),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.chatRoom:
-        if (hasInvalidArgs<ChatRoomArguments>(args, isRequired: true)) {
-          return misTypedArgsRoute<ChatRoomArguments>(args);
-        }
-        final typedArgs = args as ChatRoomArguments;
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              ChatRoom(typedArgs.chatId),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.fullPhoto:
-        if (hasInvalidArgs<FullPhotoArguments>(args, isRequired: true)) {
-          return misTypedArgsRoute<FullPhotoArguments>(args);
-        }
-        final typedArgs = args as FullPhotoArguments;
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) => FullPhoto(
-              key: typedArgs.key, url: typedArgs.url, file: typedArgs.file),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.uploadEvent:
-        if (hasInvalidArgs<UploadEventArguments>(args)) {
-          return misTypedArgsRoute<UploadEventArguments>(args);
-        }
-        final typedArgs =
-            args as UploadEventArguments ?? UploadEventArguments();
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              UploadEvent(myEvent: typedArgs.myEvent),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.details:
-        if (hasInvalidArgs<DetailsArguments>(args, isRequired: true)) {
-          return misTypedArgsRoute<DetailsArguments>(args);
-        }
-        final typedArgs = args as DetailsArguments;
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              Details(typedArgs.event),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.formulaChoice:
-        if (hasInvalidArgs<FormulaChoiceArguments>(args, isRequired: true)) {
-          return misTypedArgsRoute<FormulaChoiceArguments>(args);
-        }
-        final typedArgs = args as FormulaChoiceArguments;
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              FormulaChoice(
-                  typedArgs.formulas, typedArgs.eventId, typedArgs.imageUrl),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.qrCode:
-        if (hasInvalidArgs<QrCodeArguments>(args, isRequired: true)) {
-          return misTypedArgsRoute<QrCodeArguments>(args);
-        }
-        final typedArgs = args as QrCodeArguments;
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              QrCode(typedArgs.data),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.monitoringScanner:
-        if (hasInvalidArgs<MonitoringScannerArguments>(args,
-            isRequired: true)) {
-          return misTypedArgsRoute<MonitoringScannerArguments>(args);
-        }
-        final typedArgs = args as MonitoringScannerArguments;
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              MonitoringScanner(typedArgs.eventId),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.adminEvents:
-        return PageRouteBuilder<dynamic>(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              AdminEvents(),
-          settings: settings,
-          transitionsBuilder: TransitionsBuilders.zoomIn,
-          transitionDuration: const Duration(milliseconds: 300),
-        );
-      case Routes.splashScreen:
-        return MaterialPageRoute<dynamic>(
-          builder: (context) => MySplashScreen(),
-          settings: settings,
-        );
-      case Routes.walkthrough:
-        return MaterialPageRoute<dynamic>(
-          builder: (context) => Walkthrough(),
-          settings: settings,
-        );
-      default:
-        return unknownRoutePage(settings.name);
-    }
-  }
+  Map<Type, AutoRouteFactory> get pagesMap => _pagesMap;
+  final _pagesMap = <Type, AutoRouteFactory>{
+    Authentication: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => Authentication(),
+        settings: data,
+      );
+    },
+    LoginForm: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => LoginForm(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    ResetPassword: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => ResetPassword(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    SignUp: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => SignUp(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    BaseScreens: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => BaseScreens(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    ChatRoom: (data) {
+      final args = data.getArgs<ChatRoomArguments>(nullOk: false);
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => ChatRoom(args.chatId),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    FullPhoto: (data) {
+      final args = data.getArgs<FullPhotoArguments>(nullOk: false);
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => FullPhoto(
+          key: args.key,
+          url: args.url,
+          file: args.file,
+        ),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    UploadEvent: (data) {
+      final args = data.getArgs<UploadEventArguments>(
+        orElse: () => UploadEventArguments(),
+      );
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => UploadEvent(myEvent: args.myEvent),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    Details: (data) {
+      final args = data.getArgs<DetailsArguments>(nullOk: false);
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => Details(args.event),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    FormulaChoice: (data) {
+      final args = data.getArgs<FormulaChoiceArguments>(nullOk: false);
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => FormulaChoice(
+          args.formulas,
+          args.eventId,
+          args.imageUrl,
+          args.stripeAccount,
+          args.latLng,
+          args.dateDebut,
+        ),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    QrCode: (data) {
+      final args = data.getArgs<QrCodeArguments>(nullOk: false);
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => QrCode(args.data),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    MonitoringScanner: (data) {
+      final args = data.getArgs<MonitoringScannerArguments>(nullOk: false);
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => MonitoringScanner(args.eventId),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    AdminEvents: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => AdminEvents(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    AdminOrganisateurs: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => AdminOrganisateurs(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    MySplashScreen: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => MySplashScreen(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    Walkthrough: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => Walkthrough(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    CguCgvAccept: (data) {
+      final args = data.getArgs<CguCgvAcceptArguments>(nullOk: false);
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => CguCgvAccept(args.uid),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    StripeProfile: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => StripeProfile(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    Transport: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => Transport(),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    TransportDetail: (data) {
+      final args = data.getArgs<TransportDetailArguments>(nullOk: false);
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => TransportDetail(
+          args.myTransport,
+          args.addressArriver,
+        ),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+  };
 }
 
-// *************************************************************************
-// Arguments holder classes
-// **************************************************************************
+/// ************************************************************************
+/// Arguments holder classes
+/// *************************************************************************
 
-//ChatRoom arguments holder class
+/// ChatRoom arguments holder class
 class ChatRoomArguments {
   final String chatId;
   ChatRoomArguments({@required this.chatId});
 }
 
-//FullPhoto arguments holder class
+/// FullPhoto arguments holder class
 class FullPhotoArguments {
   final Key key;
   final String url;
@@ -235,37 +293,57 @@ class FullPhotoArguments {
   FullPhotoArguments({this.key, @required this.url, this.file});
 }
 
-//UploadEvent arguments holder class
+/// UploadEvent arguments holder class
 class UploadEventArguments {
   final MyEvent myEvent;
   UploadEventArguments({this.myEvent});
 }
 
-//Details arguments holder class
+/// Details arguments holder class
 class DetailsArguments {
   final MyEvent event;
   DetailsArguments({@required this.event});
 }
 
-//FormulaChoice arguments holder class
+/// FormulaChoice arguments holder class
 class FormulaChoiceArguments {
   final List<Formule> formulas;
   final String eventId;
   final String imageUrl;
+  final String stripeAccount;
+  final LatLng latLng;
+  final DateTime dateDebut;
   FormulaChoiceArguments(
       {@required this.formulas,
       @required this.eventId,
-      @required this.imageUrl});
+      @required this.imageUrl,
+      @required this.stripeAccount,
+      @required this.latLng,
+      @required this.dateDebut});
 }
 
-//QrCode arguments holder class
+/// QrCode arguments holder class
 class QrCodeArguments {
   final String data;
   QrCodeArguments({@required this.data});
 }
 
-//MonitoringScanner arguments holder class
+/// MonitoringScanner arguments holder class
 class MonitoringScannerArguments {
   final String eventId;
   MonitoringScannerArguments({@required this.eventId});
+}
+
+/// CguCgvAccept arguments holder class
+class CguCgvAcceptArguments {
+  final String uid;
+  CguCgvAcceptArguments({@required this.uid});
+}
+
+/// TransportDetail arguments holder class
+class TransportDetailArguments {
+  final MyTransport myTransport;
+  final String addressArriver;
+  TransportDetailArguments(
+      {@required this.myTransport, @required this.addressArriver});
 }

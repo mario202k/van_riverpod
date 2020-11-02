@@ -3,6 +3,8 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meta/meta.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vanevents/models/myUser.dart';
 import 'package:vanevents/repository/user_repository.dart';
 
 part 'authentication_event.dart';
@@ -11,28 +13,20 @@ part 'authentication_state.dart';
 
 class AuthenticationBloc
     extends Bloc<AuthenticationEvent, AuthenticationState> {
-  final bool _seenOnboarding;
   final UserRepository _userRepository;
 
-  AuthenticationBloc(
-      {@required UserRepository userRepository,
-        @required bool seenOnboarding })
+  AuthenticationBloc({@required UserRepository userRepository})
       : assert(userRepository != null),
-        assert(seenOnboarding != null),
-        _seenOnboarding = seenOnboarding,
-        _userRepository = userRepository;
+        _userRepository = userRepository,
+        super(null);
 
   @override
   AuthenticationState get initialState => AuthenticationInitial();
-
 
   @override
   Stream<AuthenticationState> mapEventToState(
     AuthenticationEvent event,
   ) async* {
-
-    //_userRepository.signOut();
-
     if (event is AuthenticationStarted) {
       yield* _mapAuthenticationStartedToState();
     } else if (event is AuthenticationLoggedIn) {
@@ -44,34 +38,44 @@ class AuthenticationBloc
 
   Stream<AuthenticationState> _mapAuthenticationStartedToState() async* {
 
-    print('_mapAuthenticationStartedToState');
-
 
     final isSignedIn = await _userRepository.isSignedIn();
     if (isSignedIn) {
-      final firebaseUser = await _userRepository.getUser();
-      yield AuthenticationSuccess(firebaseUser);
-    }else {
-      print(_seenOnboarding);
-      yield AuthenticationFailure(_seenOnboarding);
+      final firebaseUser = await _userRepository.getFireBaseUser();
+
+      final user = await _userRepository.getMyUser(firebaseUser.uid);
+      if (!user.isAcceptedCGUCGV ) {
+        yield AuthenticationCGUCGV(firebaseUser);
+      } else {
+        yield AuthenticationSuccess(firebaseUser,user);
+      }
+    } else {
+      yield AuthenticationFailure(
+          (await SharedPreferences.getInstance()).getBool('seen') ?? false);
     }
   }
 
   Stream<AuthenticationState> _mapAuthenticationLoggedInToState() async* {
+    try {
+      final firebaseUser = await _userRepository.getFireBaseUser();
 
-    try{
-      final firebaseUser = await _userRepository.getUser();
+      final user = await _userRepository.getMyUser(firebaseUser.uid);
 
-      yield AuthenticationSuccess(firebaseUser);
-    }catch(e){
-      print(e);
-      yield AuthenticationFailure(_seenOnboarding);
+      if (!user.isAcceptedCGUCGV) {
+        yield AuthenticationCGUCGV(firebaseUser);
+      } else {
+        yield AuthenticationSuccess(firebaseUser,user);
+      }
+    } catch (e) {
+
+      yield AuthenticationFailure(
+          (await SharedPreferences.getInstance()).getBool('seen') ?? false);
     }
-
   }
 
   Stream<AuthenticationState> _mapAuthenticationLoggedOutToState() async* {
-    yield AuthenticationFailure(_seenOnboarding);
+    yield AuthenticationFailure(
+        (await SharedPreferences.getInstance()).getBool('seen') ?? false);
     _userRepository.signOut();
   }
 }

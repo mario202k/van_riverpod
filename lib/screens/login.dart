@@ -13,17 +13,13 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
-
-
   @override
   void initState() {
-
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       color: Theme.of(context).colorScheme.secondary,
       child: SafeArea(
@@ -31,13 +27,16 @@ class _LoginFormState extends State<LoginForm> {
           appBar: PreferredSize(
               preferredSize: Size.fromHeight(0),
               child: AppBar(
-                backgroundColor: Theme.of(context).colorScheme.secondary,// Here we create one to set status bar color
-                brightness: Brightness.dark, // Set any color of status bar you want; or it defaults to your theme's primary color
-              )
-          ),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .secondary, // Here we create one to set status bar color
+                brightness: Brightness
+                    .dark, // Set any color of status bar you want; or it defaults to your theme's primary color
+              )),
           backgroundColor: Theme.of(context).colorScheme.background,
           body: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints viewportConstraints) {
+            builder:
+                (BuildContext context, BoxConstraints viewportConstraints) {
               return SingleChildScrollView(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
@@ -57,8 +56,7 @@ class _LoginFormState extends State<LoginForm> {
                                   'assets/animations/dance.flr',
                                   alignment: Alignment.center,
                                   animation: 'dance',
-                                )
-                            ),
+                                )),
                           ),
                         ),
                       ),
@@ -101,8 +99,9 @@ class _LoginFormState extends State<LoginForm> {
                                         child: Text(
                                           'ou',
                                           textAlign: TextAlign.center,
-                                          style:
-                                              Theme.of(context).textTheme.button,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .button,
                                         )),
                                     Expanded(
                                         flex: 4,
@@ -149,7 +148,7 @@ class _LoginFormState extends State<LoginForm> {
                                 ),
                                 FlatButton(
                                   onPressed: () => ExtendedNavigator.of(context)
-                                      .pushNamed(Routes.signUp),
+                                      .push(Routes.signUp),
                                   child: Text(
                                     'Pas de compte? S\'inscrire maintenant',
                                     textAlign: TextAlign.center,
@@ -161,7 +160,7 @@ class _LoginFormState extends State<LoginForm> {
                                 ),
                                 FlatButton(
                                   onPressed: () => ExtendedNavigator.of(context)
-                                      .pushNamed(Routes.resetPassword),
+                                      .push(Routes.resetPassword),
                                   child: Text(
                                     'Mot de passe oublié?',
                                     textAlign: TextAlign.center,

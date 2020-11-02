@@ -1,13 +1,11 @@
 import 'dart:io';
-import 'package:auto_route/auto_route.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:platform_alert_dialog/platform_alert_dialog.dart';
-import 'package:provider/provider.dart';
-import 'package:vanevents/services/firebase_auth_service.dart';
 
 class CardForm extends StatefulWidget {
   final List<String> formContent;
@@ -106,7 +104,7 @@ class _CardFormState extends State<CardForm> {
                   padding: const EdgeInsets.only(bottom: 20),
                   child: FormBuilder(
                     key: _fbKey,
-                    autovalidate: false,
+                    //autovalidate: false,
                     child: Column(
                         children: List<Widget>.generate(
                             widget.formContent.length,

@@ -9,10 +9,10 @@ class Ticket{
   final Map participants;
   final int amount;
   final DateTime dateTime;
-  final int receiptNumber;
+
 
   Ticket({this.id,this.status,this.uid, this.eventId, this.imageUrl, this.participants,
-      this.amount, this.dateTime, this.receiptNumber});
+      this.amount, this.dateTime});
 
   Map<String, dynamic> toMap() {
     return {
@@ -24,7 +24,7 @@ class Ticket{
       'participant': this.participants,
       'amount': this.amount,
       'dateTime': this.dateTime,
-      'receiptNumber': this.receiptNumber,
+
     };
   }
 
@@ -40,7 +40,6 @@ class Ticket{
       participants: map['participant'] as Map,
       amount: map['amount'] as int,
       dateTime: time.toDate(),
-      receiptNumber: map['receiptNumber'] as int,
     );
   }
 }

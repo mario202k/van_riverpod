@@ -10,20 +10,34 @@ abstract class AuthenticationState extends Equatable {
 class AuthenticationInitial extends AuthenticationState {}
 
 class AuthenticationSuccess extends AuthenticationState {
-  final FirebaseUser firebaseUser;
+  final User firebaseUser;
+  final MyUser myUser;
 
-  const AuthenticationSuccess(this.firebaseUser);
+  const AuthenticationSuccess(this.firebaseUser,this.myUser);
+
+  @override
+  List<Object> get props => [firebaseUser,myUser];
+
+  @override
+  String toString() => 'Authenticated { displayName: $firebaseUser }';
+}
+
+class AuthenticationCGUCGV extends AuthenticationState {
+
+  final User firebaseUser;
+
+  const AuthenticationCGUCGV(this.firebaseUser);
 
   @override
   List<Object> get props => [firebaseUser];
 
   @override
   String toString() => 'Authenticated { displayName: $firebaseUser }';
+
 }
 
 class AuthenticationFailure extends AuthenticationState {
   final bool seenOnboarding;
-
 
   const AuthenticationFailure(this.seenOnboarding);
 
@@ -35,5 +49,3 @@ class AuthenticationFailure extends AuthenticationState {
     return 'AuthenticationFailure{seenOnboarding: $seenOnboarding}';
   }
 }
-
-

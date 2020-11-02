@@ -1,30 +1,28 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart' hide Router;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vanevents/auth_widget_builder.dart';
+import 'package:vanevents/authentication.dart';
 import 'package:vanevents/bloc/authentication_bloc/authentication_bloc.dart';
 import 'package:vanevents/bloc/message/message_bloc.dart';
 import 'package:vanevents/bloc/navigation_bloc/navigation_bloc.dart';
-import 'package:vanevents/bloc/simple_bloc_delegate.dart';
-import 'package:vanevents/models/user.dart';
 import 'package:vanevents/repository/user_repository.dart';
 import 'package:vanevents/routing/route.gr.dart';
-import 'package:vanevents/services/firebase_auth_service.dart';
+import 'package:vanevents/screens/home_events.dart';
 import 'package:vanevents/services/firebase_cloud_messaging.dart';
-import 'package:vanevents/services/firestore_database.dart';
-import 'package:vanevents/shared/toggle_bool_chat_room.dart';
+import 'package:vanevents/shared/my_event_search_chat.dart';
+import 'package:vanevents/shared/user_search_chat.dart';
 
-void main() {
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  BlocSupervisor.delegate = SimpleBlocDelegate();
-  final UserRepository userRepository = UserRepository();
-  SharedPreferences.getInstance().then((prefs) {
-    runApp(MyApp(userRepository: userRepository, prefs: prefs));
-  });
+  //BlocSupervisor.delegate = SimpleBlocDelegate();
+  await Firebase.initializeApp();
+  runApp(ProviderScope(child: MyApp()));
 }
 
 void callBackFunction(String tag) {
@@ -47,24 +45,10 @@ Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
   return NotificationHandler().showNotification(message);
 }
 
-AsyncSnapshot<FirebaseUser> userSnapshotStatic;
 
 class MyApp extends StatelessWidget {
-  final SharedPreferences _prefs;
-  final UserRepository _userRepository;
-
-  MyApp(
-      {Key key,
-      @required UserRepository userRepository,
-      @required SharedPreferences prefs})
-      : assert(userRepository != null),
-        assert(prefs != null),
-        _userRepository = userRepository,
-        _prefs = prefs,
-        super(key: key);
-
   final ColorScheme colorScheme = ColorScheme(
-      primary: const Color(0xFFe53935),
+      primary: const Color(0xFFaf0b0b),
       primaryVariant: const Color(0xFFdf78ef),
       secondary: const Color(0xFFffcccb),
       secondaryVariant: const Color(0xFF039be5),
@@ -75,7 +59,7 @@ class MyApp extends StatelessWidget {
 //      background: const Color(0xFF790e8b),
 //      surface: const Color(0xFF00600f),
       onBackground: const Color(0xFF000000),
-      error: const Color(0xFF8b0e21),
+      error: const Color(0xFF039be5),
       onError: const Color(0xFFFFFFFF),
       onPrimary: const Color(0xFFFFFFFF),
       onSecondary: const Color(0xFFFFFFFF),
@@ -86,77 +70,83 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
         providers: [
-          ChangeNotifierProvider<BoolToggle>(
-            create: (context) => BoolToggle(
-                isEnableNotification: _prefs.getBool('VanEvent') ?? true),
-          ),
-          BlocProvider(
-            create: (context) => AuthenticationBloc(
-                userRepository: _userRepository,
-                seenOnboarding: _prefs.getBool('seen') ?? false)
-              ..add(AuthenticationStarted()),
-          ),
-          Provider<UserRepository>(
-            create: (context) => _userRepository,
-          ),
-          Provider<FirestoreDatabase>(
-            create: (context) => FirestoreDatabase(),
-          ),
-          Provider<User>(
-            create: (context) => User(),
-          ),
-          ChangeNotifierProvider<ValueNotifier<bool>>(
-            create: (context) => ValueNotifier<bool>(false),
-          ),
           BlocProvider<NavigationBloc>(
-            create: (BuildContext context) => NavigationBloc(),
+            create: (BuildContext context) => NavigationBloc(HomeEvents()),
+          ),
+          BlocProvider<MyEventSearchNameCubit>(
+            create: (context) =>
+                MyEventSearchNameCubit(MyEventSearchState.loading()),
+          ),
+          BlocProvider<UserSearchNameCubit>(
+            create: (context) => UserSearchNameCubit(UserSearchState.loading()),
           ),
           BlocProvider<MessageBloc>(
-            create: (BuildContext context) => MessageBloc(),
+            create: (BuildContext context) =>
+                MessageBloc(MessageState.loading()),
+          ),
+          BlocProvider(
+            create: (context) =>
+                AuthenticationBloc(userRepository: UserRepository())
+                  ..add(AuthenticationStarted()),
           ),
         ],
         child: Material(
             color: Colors.black,
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
+              localizationsDelegates: [
+                // ... app-specific localization delegate[s] here
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                const Locale('fr', 'FR'), // English, no country code
+              ],
               theme: ThemeData(
                 colorScheme: colorScheme,
                 primaryColor: colorScheme.primary,
-                accentColor: colorScheme.secondary,
+                accentColor: colorScheme.primary,
                 backgroundColor: colorScheme.background,
                 textTheme: TextTheme(
-                  bodyText1: GoogleFonts.raleway(
+                  bodyText1: GoogleFonts.poiretOne(
                     fontSize: 25.0,
                     color: colorScheme.onBackground,
                   ),
-                  bodyText2: GoogleFonts.raleway(
+                  bodyText2: GoogleFonts.poiretOne(
                     fontSize: 32.0,
                     fontWeight: FontWeight.w600,
                     color: colorScheme.onBackground,
                   ),
-                  caption: GoogleFonts.sourceCodePro(
+                  caption: GoogleFonts.poiretOne(
                     fontSize: 11.0,
                     color: colorScheme.onPrimary,
                   ),
-                  headline6: GoogleFonts.raleway(
+
+
+                  headline6: GoogleFonts.poiretOne(
                     //App Bar alertdialog.title
                     fontSize: 31.0,
                     fontWeight: FontWeight.w600,
                     color: colorScheme.onPrimary,
                   ),
-                  headline5: GoogleFonts.sourceCodePro(
-                    fontSize: 16.0,
+                  headline5: GoogleFonts.poiretOne(
+                    fontSize: 17.0,
                     color: colorScheme.onBackground,
                   ),
-                  overline: GoogleFonts.sourceCodePro(
+                  headline4: GoogleFonts.poiretOne(
+                    fontSize: 29.0,
+                    color: colorScheme.onBackground,
+                  ),
+                  overline: GoogleFonts.poiretOne(
                     fontSize: 11.0,
                     color: colorScheme.onPrimary,
                   ),
-                  button: GoogleFonts.sourceCodePro(
+                  button: GoogleFonts.poiretOne(
                     fontSize: 17.0,
                     color: colorScheme.onPrimary,
                   ),
-                  subtitle2: GoogleFonts.sourceCodePro(
+                  subtitle2: GoogleFonts.poiretOne(
                     fontSize: 18.0,
                     fontWeight: FontWeight.w600,
                     color: colorScheme.onBackground,
@@ -185,6 +175,7 @@ class MyApp extends StatelessWidget {
                 inputDecorationTheme: InputDecorationTheme(
 //                  filled: true,
 //                  fillColor: Color(0xFFF2F2F2),
+
                   border: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: colorScheme.onBackground,
@@ -221,7 +212,11 @@ class MyApp extends StatelessWidget {
                           style: BorderStyle.solid,
                           width: 2),
                       borderRadius: BorderRadius.circular(25.0)),
-                  labelStyle: GoogleFonts.sourceCodePro(
+                  labelStyle: GoogleFonts.poiretOne(
+                    fontSize: 17.0,
+                    color: colorScheme.onBackground,
+                  ),
+                  counterStyle: GoogleFonts.poiretOne(
                     fontSize: 17.0,
                     color: colorScheme.onBackground,
                   ),
@@ -231,17 +226,23 @@ class MyApp extends StatelessWidget {
                   ),
                 ),
                 cardTheme: CardTheme(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25))),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25)),
+                  elevation: 20,
+                  //color: colorScheme.secondary,
+                ),
                 dividerTheme: DividerThemeData(
                     color: colorScheme.primary,
                     thickness: 1,
                     indent: 30,
                     endIndent: 30),
               ),
+              initialRoute: Routes.authentication,
               builder: ExtendedNavigator<Router>(
                 router: Router(),
+                initialRoute: Routes.authentication,
               ),
+              home: Authentication(),
               navigatorObservers: [
                 HeroController(),
               ],

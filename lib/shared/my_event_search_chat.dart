@@ -7,10 +7,10 @@ import 'package:shimmer/shimmer.dart';
 import 'package:vanevents/models/event.dart';
 
 class MyEventSearch extends SearchDelegate<MyEvent> {
-  final Bloc<MyEventSearchEvent, MyEventSearchState> myEventBloc;
-  FirebaseMessaging firebaseMessaging =  FirebaseMessaging();
 
-  MyEventSearch(this.myEventBloc);
+  FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+
+  MyEventSearch();
 
   @override
   ThemeData appBarTheme(BuildContext context) {
@@ -41,10 +41,9 @@ class MyEventSearch extends SearchDelegate<MyEvent> {
 
   @override
   Widget buildResults(BuildContext context) {
-    myEventBloc.add(MyEventSearchEvent(query));
+    context.bloc<MyEventSearchNameCubit>().myEventSearchNameCubit(query);
 
-    return BlocBuilder(
-      bloc: myEventBloc,
+    return BlocBuilder<MyEventSearchNameCubit, MyEventSearchState>(
       builder: (BuildContext context, MyEventSearchState state) {
         if (state.isLoading) {
           return Center(
@@ -64,13 +63,15 @@ class MyEventSearch extends SearchDelegate<MyEvent> {
           itemBuilder: (context, index) {
 
             return ListTile(
-              title: Text(state.myEvents ?? ''),
+              title: Text(state.myEvents[index].titre ?? ''),
               leading: CircleAvatar(
-                backgroundImage: NetworkImage(state.myEvents[index].imageFlyerUrl),
+                backgroundImage:
+                    NetworkImage(state.myEvents[index].imageFlyerUrl),
                 radius: 25,
               ),
               onTap: () {
-                firebaseMessaging.subscribeToTopic(state.myEvents[index].chatId);
+                firebaseMessaging
+                    .subscribeToTopic(state.myEvents[index].chatId);
                 close(context, state.myEvents[index]);
               },
             );
@@ -86,10 +87,9 @@ class MyEventSearch extends SearchDelegate<MyEvent> {
     // This method is called everytime the search term changes.
     // If you want to add search suggestions as the user enters their search term, this is the place to do that.
 
-    myEventBloc.add(MyEventSearchEvent(query));
+    context.bloc<MyEventSearchNameCubit>().myEventSearchNameCubit(query);
 
-    return BlocBuilder(
-      bloc: myEventBloc,
+    return BlocBuilder<MyEventSearchNameCubit, MyEventSearchState>(
       builder: (BuildContext context, MyEventSearchState state) {
         if (state.isLoading) {
           return Container(
@@ -130,7 +130,7 @@ class MyEventSearch extends SearchDelegate<MyEvent> {
               return ListTile(
                 title: Text(
                   state.myEvents[index].titre ?? '',
-                  style: Theme.of(context).textTheme.button,
+                  style: Theme.of(context).textTheme.bodyText1,
                 ),
                 leading: CachedNetworkImage(
                   imageUrl: state.myEvents[index].imageFlyerUrl,
@@ -168,28 +168,19 @@ class MyEventSearch extends SearchDelegate<MyEvent> {
   }
 }
 
-class MyEventBlocSearchName
-    extends Bloc<MyEventSearchEvent, MyEventSearchState> {
+class MyEventSearchNameCubit extends Cubit<MyEventSearchState> {
   List<MyEvent> myEvents = List<MyEvent>();
 
-  @override
-  MyEventSearchState get initialState => MyEventSearchState.initial();
+  MyEventSearchNameCubit(MyEventSearchState initialState) : super(initialState);
 
-  @override
-  void onTransition(
-      Transition<MyEventSearchEvent, MyEventSearchState> transition) {
-
-  }
-
-  @override
-  Stream<MyEventSearchState> mapEventToState(MyEventSearchEvent event) async* {
-    yield MyEventSearchState.loading();
+  void myEventSearchNameCubit(String query) async {
+    emit(MyEventSearchState.loading());
 
     try {
-      List<MyEvent> myEvents = await _getSearchResults(event.query);
-      yield MyEventSearchState.success(myEvents);
+      List<MyEvent> myEvents = await _getSearchResults(query);
+      emit(MyEventSearchState.success(myEvents));
     } catch (err) {
-      yield MyEventSearchState.error();
+      emit(MyEventSearchState.error());
     }
   }
 
@@ -218,11 +209,11 @@ class MyEventBlocSearchName
 //              .map((doc) => MyEvent.fromMap(doc.data, doc.documentID))
 //              .toList());
 
-      myEvents = await Firestore.instance
+      myEvents = await FirebaseFirestore.instance
           .collection('events')
-          .getDocuments()
-          .then((docs) => docs.documents
-              .map((doc) => MyEvent.fromMap(doc.data, doc.documentID))
+          .get()
+          .then((docs) => docs.docs
+              .map((doc) => MyEvent.fromMap(doc.data(), doc.id))
               .toList());
 
       //users = List.from(user1)..addAll(user2); //Tout le monde sauf moi
@@ -239,21 +230,12 @@ class MyEventBlocSearchName
   }
 }
 
-class MyEventSearchEvent {
-  final String query;
-
-  const MyEventSearchEvent(this.query);
-
-  @override
-  String toString() => 'MyEventSearchEvent { query: $query }';
-}
-
-class MyEventSearchState {
+class MyEventSearchState  {
   final bool isLoading;
   final List<MyEvent> myEvents;
   final bool hasError;
 
-  const MyEventSearchState({this.isLoading, this.myEvents, this.hasError});
+  MyEventSearchState({this.isLoading, this.myEvents, this.hasError});
 
   factory MyEventSearchState.initial() {
     return MyEventSearchState(

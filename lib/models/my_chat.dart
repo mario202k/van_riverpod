@@ -35,7 +35,7 @@ class MyChat {
       createdAt: createdAt.toDate(),
       membres: map['membres'] as Map?? {},
       isGroupe: map['isGroupe'] as bool ?? false,
-      imageUrl: map['imageUrl'] as String ?? '',
+      imageUrl: map['imageUrl'] as String ?? 'https://res.cloudinary.com/dtbudl0yx/image/fetch/w_2000,f_auto,q_auto,c_fit/https://adamtheautomator.com/wp-content/uploads/2019/10/user-1633249_1280-1024x998.png',
       titre:  map['titre'] as String ?? '',
     );
   }

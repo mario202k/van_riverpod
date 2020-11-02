@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
-
 class ModelBody extends StatelessWidget {
-  final Widget  child;
-
-
+  final Widget child;
 
   ModelBody({Key key, @required this.child})
       : assert(child != null),
@@ -16,7 +13,6 @@ class ModelBody extends StatelessWidget {
       backgroundColor: Theme.of(context).colorScheme.background,
       body: LayoutBuilder(builder: (context, constraints) {
         return SingleChildScrollView(
-
           physics: ClampingScrollPhysics(),
           child: ConstrainedBox(
             constraints: BoxConstraints(

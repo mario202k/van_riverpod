@@ -29,7 +29,6 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
   Stream<List<Ticket>> ticketsStream;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
-
   @override
   void initState() {
     super.initState();
@@ -50,7 +49,9 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
         key: _scaffoldKey,
-        appBar: AppBar(title: Text('Monitoring'),),
+        appBar: AppBar(
+          title: Text('Monitoring'),
+        ),
         body: LayoutBuilder(builder: (context, constraints) {
           return SingleChildScrollView(
             child: ConstrainedBox(
@@ -83,8 +84,10 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                         ongoingTicket = tickets[i];
                       }
 
-                      if(tickets[i].status != 'Annulé'){
-                        for (int j = 0; j < tickets[i].participants.length; j++) {
+                      if (tickets[i].status != 'Annulé') {
+                        for (int j = 0;
+                            j < tickets[i].participants.length;
+                            j++) {
                           expected++;
 
                           if (tickets[i].participants.values.toList()[j][1]) {
@@ -161,8 +164,8 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                           String key = ongoingTicket
                                               .participants.keys
                                               .toList()[index];
-                                          bool isHere =
-                                              ongoingTicket.participants[key][1];
+                                          bool isHere = ongoingTicket
+                                              .participants[key][1];
                                           return SizedBox(
                                             width: 250,
                                             child: GestureDetector(
@@ -212,7 +215,8 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                           db.toutValider(ongoingTicket),
                                       child: Text(
                                         'Tout le monde',
-                                        style: Theme.of(context).textTheme.button,
+                                        style:
+                                            Theme.of(context).textTheme.button,
                                       ),
                                     )
                                   : SizedBox(),
@@ -282,8 +286,6 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
 
       if (rep) {
         if (tickets[j].participants.length == 1) {
-
-
           db.showSnackBar2("Ok pour : 1 participant", _scaffoldKey);
         } else {
           db.showSnackBar2(

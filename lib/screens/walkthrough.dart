@@ -74,8 +74,7 @@ class _WalkthroughState extends State<Walkthrough> {
                         alignment: Alignment.centerRight,
                         child: FlatButton(
                           onPressed: () {
-                            ExtendedNavigator.of(context)
-                                .pushReplacementNamed(Routes.splashScreen);
+                            ExtendedNavigator.of(context).replace(Routes.mySplashScreen);
 
                           },
                           child: Text(
@@ -226,7 +225,7 @@ class _WalkthroughState extends State<Walkthrough> {
                 child: GestureDetector(
                   onTap: () {
                     ExtendedNavigator.of(context)
-                        .pushReplacementNamed(Routes.splashScreen);
+                        .replace(Routes.mySplashScreen);
                   },
                   child: Center(
                     child: Padding(

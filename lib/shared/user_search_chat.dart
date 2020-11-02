@@ -4,21 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:vanevents/models/user.dart';
+import 'package:vanevents/models/myUser.dart';
 
 
-class UserSearch extends SearchDelegate<User> {
-  final Bloc<UserSearchEvent, UserSearchState> userBloc;
+class UserSearch extends SearchDelegate<MyUser> {
 
-  UserSearch(this.userBloc);
+  UserSearch();
 
   @override
   ThemeData appBarTheme(BuildContext context) {
     return Theme.of(context);
   }
-
-
-
 
 
   @override
@@ -45,11 +41,11 @@ class UserSearch extends SearchDelegate<User> {
 
   @override
   Widget buildResults(BuildContext context) {
-    User user = Provider.of<User>(context);
-    userBloc.add(UserSearchEvent(query, user.id));
+    MyUser user = Provider.of<MyUser>(context);
 
-    return BlocBuilder(
-      bloc: userBloc,
+    context.bloc<UserSearchNameCubit>().userSearch(query, user.id);
+
+    return BlocBuilder<UserSearchNameCubit,UserSearchState>(
       builder: (BuildContext context, UserSearchState state) {
         if (state.isLoading) {
           return Center(
@@ -89,11 +85,11 @@ class UserSearch extends SearchDelegate<User> {
   Widget buildSuggestions(BuildContext context) {
     // This method is called everytime the search term changes.
     // If you want to add search suggestions as the user enters their search term, this is the place to do that.
-    User user = Provider.of<User>(context);
-    userBloc.add(UserSearchEvent(query, user.id));
+    MyUser user = Provider.of<MyUser>(context);
+    context.bloc<UserSearchNameCubit>().userSearch(query, user.id);
 
-    return BlocBuilder(
-      bloc: userBloc,
+    return BlocBuilder<UserSearchNameCubit,UserSearchState>(
+
       builder: (BuildContext context, UserSearchState state) {
         if (state.isLoading) {
           return Container(
@@ -183,32 +179,26 @@ class UserSearch extends SearchDelegate<User> {
   }
 }
 
-class UserBlocSearchName extends Bloc<UserSearchEvent, UserSearchState> {
-  List<User> users = List<User>();
+class UserSearchNameCubit extends Cubit<UserSearchState> {
+  List<MyUser> users = List<MyUser>();
 
-  @override
-  UserSearchState get initialState => UserSearchState.initial();
+  UserSearchNameCubit(UserSearchState initialState) : super(initialState);
 
-  @override
-  void onTransition(Transition<UserSearchEvent, UserSearchState> transition) {
-
-  }
-
-  @override
-  Stream<UserSearchState> mapEventToState(UserSearchEvent event) async* {
-    yield UserSearchState.loading();
-
+  void userSearch(String query, String myId)async{
+    emit(UserSearchState.loading());
     try {
-      List<User> users = await _getSearchResults(event.query, event.myId);
-      yield UserSearchState.success(users);
+      List<MyUser> users = await _getSearchResults(query, myId);
+      emit( UserSearchState.success(users));
     } catch (err) {
 
-      yield UserSearchState.error();
+      emit(UserSearchState.error());
     }
+
   }
 
-  Future<List<User>> _getSearchResults(String query, String myId) async {
-    List<User> result = List<User>();
+
+  Future<List<MyUser>> _getSearchResults(String query, String myId) async {
+    List<MyUser> result = List<MyUser>();
 
 //    Firestore.instance
 //        .collection('collection-name')
@@ -232,12 +222,12 @@ class UserBlocSearchName extends Bloc<UserSearchEvent, UserSearchState> {
 //              .map((doc) => User.fromMap(doc.data, doc.documentID))
 //              .toList());
 
-      users = await Firestore.instance.collection('users')
+      users = await FirebaseFirestore.instance.collection('users')
           .where('email',isGreaterThan:'')
 
-          .getDocuments().then(
-          (docs) => docs.documents
-              .map((doc) => User.fromMap(doc.data, doc.documentID))
+          .get().then(
+          (docs) => docs.docs
+              .map((doc) => MyUser.fromMap(doc.data(), doc.id))
               .toList());
 
       users.removeWhere((user) => user.id == myId);
@@ -257,22 +247,13 @@ class UserBlocSearchName extends Bloc<UserSearchEvent, UserSearchState> {
   }
 }
 
-class UserSearchEvent {
-  final String query;
-  final String myId;
-
-  const UserSearchEvent(this.query, this.myId);
-
-  @override
-  String toString() => 'UserSearchEvent { query: $query }';
-}
 
 class UserSearchState {
   final bool isLoading;
-  final List<User> users;
+  final List<MyUser> users;
   final bool hasError;
 
-  const UserSearchState({this.isLoading, this.users, this.hasError});
+  UserSearchState({this.isLoading, this.users, this.hasError});
 
   factory UserSearchState.initial() {
     return UserSearchState(
@@ -290,7 +271,7 @@ class UserSearchState {
     );
   }
 
-  factory UserSearchState.success(List<User> users) {
+  factory UserSearchState.success(List<MyUser> users) {
     return UserSearchState(
       users: users,
       isLoading: false,

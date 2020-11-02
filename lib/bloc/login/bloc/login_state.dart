@@ -5,6 +5,7 @@ class LoginState {
 
   final bool isSubmitting;
   final bool isSuccess;
+  final bool isFirstLogin;
   final bool isFailure;
   final String rep;
 
@@ -13,6 +14,7 @@ class LoginState {
 
     @required this.isSubmitting,
     @required this.isSuccess,
+    @required this.isFirstLogin,
     @required this.isFailure,
     this.rep
   });
@@ -21,6 +23,7 @@ class LoginState {
     return LoginState(
       isSubmitting: false,
       isSuccess: false,
+      isFirstLogin: false,
       isFailure: false,
     );
   }
@@ -29,6 +32,7 @@ class LoginState {
     return LoginState(
       isSubmitting: true,
       isSuccess: false,
+      isFirstLogin: false,
       isFailure: false,
     );
   }
@@ -37,6 +41,7 @@ class LoginState {
     return LoginState(
       isSubmitting: false,
       isSuccess: false,
+      isFirstLogin: false,
       isFailure: true,
       rep: rep,
     );
@@ -46,44 +51,14 @@ class LoginState {
     return LoginState(
       isSubmitting: false,
       isSuccess: true,
+      isFirstLogin: false,
       isFailure: false,
     );
   }
 
-  LoginState update({
-    bool isEmailValid,
-    bool isPasswordValid,
-  }) {
-    return copyWith(
-      isEmailValid: isEmailValid,
-      isPasswordValid: isPasswordValid,
-      isSubmitting: false,
-      isSuccess: false,
-      isFailure: false,
-    );
-  }
-
-  LoginState copyWith({
-    bool isEmailValid,
-    bool isPasswordValid,
-    bool isSubmitEnabled,
-    bool isSubmitting,
-    bool isSuccess,
-    bool isFailure,
-  }) {
-    return LoginState(
-      isSubmitting: isSubmitting ?? this.isSubmitting,
-      isSuccess: isSuccess ?? this.isSuccess,
-      isFailure: isFailure ?? this.isFailure,
-    );
-  }
 
   @override
   String toString() {
-    return '''LoginState {   
-      isSubmitting: $isSubmitting,
-      isSuccess: $isSuccess,
-      isFailure: $isFailure,
-    }''';
+    return 'LoginState{isSubmitting: $isSubmitting, isSuccess: $isSuccess, isFirstLogin: $isFirstLogin, isFailure: $isFailure, rep: $rep}';
   }
 }

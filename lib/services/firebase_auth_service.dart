@@ -10,20 +10,20 @@ class FirebaseAuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final StorageReference _storageReference = FirebaseStorage.instance.ref();
 
-  Stream<FirebaseUser> get onAuthStateChanged {
+  Stream<User> get onAuthStateChanged {
 
-    return _firebaseAuth.onAuthStateChanged;
+    return _firebaseAuth.authStateChanges();
 
   }
 
-  Future<AuthResult> googleSignIn(BuildContext context) async {
+  Future<UserCredential> googleSignIn(BuildContext context) async {
     final GoogleSignIn _googleSignIn = GoogleSignIn();
     try {
       GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
       GoogleSignInAuthentication googleAuth =
           await googleSignInAccount.authentication;
 
-      final AuthCredential credential = GoogleAuthProvider.getCredential(
+      final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
@@ -35,7 +35,7 @@ class FirebaseAuthService {
     }
   }
 
-  Future<AuthResult> signInWithEmailAndPassword(
+  Future<UserCredential> signInWithEmailAndPassword(
       String email, String password) async {
     return await _firebaseAuth
         .signInWithCredential(EmailAuthProvider.getCredential(
@@ -44,7 +44,7 @@ class FirebaseAuthService {
     ));
   }
 
-  Future<AuthResult> createUserWithEmailAndPassword(
+  Future<UserCredential> createUserWithEmailAndPassword(
       String email, String password) async {
     return await _firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
@@ -54,8 +54,8 @@ class FirebaseAuthService {
     await _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 
-  Future<FirebaseUser> currentUser() async {
-    final FirebaseUser user = await _firebaseAuth.currentUser();
+  Future<User> currentUser() async {
+    final User user = await _firebaseAuth.currentUser;
     return user;
   }
 
@@ -75,7 +75,7 @@ class FirebaseAuthService {
       BuildContext context) async {
     //Si l'utilisateur est bien inconnu
     await _firebaseAuth
-        .fetchSignInMethodsForEmail(email: email)
+        .fetchSignInMethodsForEmail(email)
         .then((list) async {
       if (list.isEmpty) {
         //création du user
@@ -93,19 +93,19 @@ class FirebaseAuthService {
           //création de l'url pour la photo profil
           await uploadImage(uploadTask).then((url) async {
             //création du user dans la _db
-            await Firestore.instance
+            await FirebaseFirestore.instance
                 .collection('users')
-                .document(user.user.uid)
-                .setData({
+                .doc(user.user.uid)
+                .set({
               "id": user.user.uid,
               'nom': nom,
               'imageUrl': url,
               'email': email,
               'password': password,
               'lastActivity': DateTime.now(),
-              'provider': user.user.providerId,
+              'provider': user.user.providerData,
               'isLogin': false,
-            }, merge: true).then((_) async {
+            }, SetOptions(merge: true)).then((_) async {
               //envoi de l'email de vérification
               await user.user.sendEmailVerification().then((_) {
                 showSnackBar('un email de validation a été envoyé', context);
